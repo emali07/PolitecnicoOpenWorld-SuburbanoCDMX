@@ -226,6 +226,12 @@ data class WorldMapState(
     val showMetrobusFade: Boolean = false,
     val metrobusFadeCompleteStation: ovh.gabrielhuav.pow.domain.models.MetrobusStation? = null,
 
+    // ─── Suburbano Stations ───────────────────────────────────────────────────
+    val suburbanoStations: List<ovh.gabrielhuav.pow.domain.models.SuburbanoStation> = emptyList(),
+    val nearbySuburbanoStation: ovh.gabrielhuav.pow.domain.models.SuburbanoStation? = null,
+    val showSuburbanoFade: Boolean = false,
+    val suburbanoFadeCompleteStation: ovh.gabrielhuav.pow.domain.models.SuburbanoStation? = null,
+
     // ─── Pre-descarga de tiles de la zona actual (offline) ───────────────────
     // Solo aplica al proveedor nativo OSM (caché Room unificada). Permite seguir
     // jugando mientras descarga (no bloqueante) y avisa si quedó incompleta por

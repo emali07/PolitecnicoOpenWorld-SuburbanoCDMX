@@ -1270,6 +1270,55 @@ internal fun NativeOsmMap(
             }
 
 
+
+            // ─── SUBURBANO STATIONS OVERLAY ────────────────────────────────────────────────
+            @Suppress("UNCHECKED_CAST")
+            val suburbanoMarkerCache = (view.getTag(ovh.gabrielhuav.pow.R.id.route_overlay_tag.let { it + 600 }) as? MutableMap<String, Marker>)
+                ?: mutableMapOf<String, Marker>().also {
+                    view.setTag(ovh.gabrielhuav.pow.R.id.route_overlay_tag.let { it + 600 }, it)
+                }
+
+            if (uiState.zoomLevel >= 14.0) {
+                val suburbanoBox = try { view.boundingBox } catch (_: Exception) { null }
+                val subLatM = if (suburbanoBox != null) (suburbanoBox.latNorth - suburbanoBox.latSouth) * 0.4 else 0.0
+                val subLonM = if (suburbanoBox != null) (suburbanoBox.lonEast - suburbanoBox.lonWest) * 0.4 else 0.0
+                uiState.suburbanoStations.forEach { station ->
+                    val marker = suburbanoMarkerCache[station.name] ?: Marker(view).apply {
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                        val screenDensity = context.resources.displayMetrics.density
+                        val exactPixels = (24 * screenDensity).toInt()
+                        val cacheKey = "OSM_SUBURBANO_ICON"
+                        val cachedIcon = nativeDrawableCache.getOrPut(cacheKey) {
+                            try {
+                                val bitmap = android.graphics.BitmapFactory.decodeStream(context.assets.open("suburbano_cdmx/icon.webp"))
+                                if (bitmap != null) {
+                                    val spriteDrawable = android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
+                                    ExactSizeDrawable(spriteDrawable, exactPixels, exactPixels)
+                                } else ContextCompat.getDrawable(context, android.R.color.transparent)!!
+                            } catch (e: Exception) {
+                                ContextCompat.getDrawable(context, android.R.color.transparent)!!
+                            }
+                        }
+                        icon = cachedIcon
+                        title = station.name
+                        snippet = station.routes.joinToString(", ")
+                        isFlat = true
+                        suburbanoMarkerCache[station.name] = this
+                        view.overlays.add(this)
+                    }
+                    marker.position = station.location
+                    val inView = suburbanoBox == null || (
+                        station.location.latitude <= suburbanoBox.latNorth + subLatM &&
+                        station.location.latitude >= suburbanoBox.latSouth - subLatM &&
+                        station.location.longitude <= suburbanoBox.lonEast + subLonM &&
+                        station.location.longitude >= suburbanoBox.lonWest - subLonM)
+                    marker.isEnabled = inView
+                    marker.setAlpha(if (inView) 1f else 0f)
+                }
+            } else {
+                suburbanoMarkerCache.values.forEach { it.isEnabled = false; it.setAlpha(0f) }
+            }
+
             // ─── OVERLAY CREADOR DE RUTAS (MIGAS DE PAN Y CARRILES) ────────────────────────
             // Dibujamos la ruta si estamos en modo diseñador y hay puntos guardados
             if (uiState.isDesignerMode && uiState.routeDebugWaypoints.isNotEmpty()) {

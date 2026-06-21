@@ -59,6 +59,7 @@ import ovh.gabrielhuav.pow.domain.models.ai.LandmarkNavGraph
 import ovh.gabrielhuav.pow.domain.models.ShineCTOLocation
 import ovh.gabrielhuav.pow.data.repository.MetroRepository
 import ovh.gabrielhuav.pow.data.repository.MetrobusRepository
+import ovh.gabrielhuav.pow.data.repository.SuburbanoRepository
 import ovh.gabrielhuav.pow.domain.models.ExteriorCollisionsConfig
 
 class WorldMapViewModel(
@@ -1864,6 +1865,19 @@ class WorldMapViewModel(
         }
     }
 
+    fun teleportToSuburbanoStation(stationName: String) {
+        val station = _uiState.value.suburbanoStations.find { it.name.equals(stationName, ignoreCase = true) }
+        station?.let {
+            teleportTo(it.location.latitude, it.location.longitude)
+        }
+    }
+
+    fun loadSuburbanoStations(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val stations = SuburbanoRepository.loadStations(context)
+            _uiState.update { it.copy(suburbanoStations = stations) }
+        }
+    }
     fun toggleTeleportMenu(show: Boolean) { _uiState.update { it.copy(showTeleportMenu = show) } }
 
     fun teleportTo(lat: Double, lon: Double) {

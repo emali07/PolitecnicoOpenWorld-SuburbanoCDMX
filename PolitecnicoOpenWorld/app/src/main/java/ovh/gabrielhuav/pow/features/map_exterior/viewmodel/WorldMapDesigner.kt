@@ -26,6 +26,7 @@ fun WorldMapViewModel.loadLandmarks(context: Context) {
     loadExteriorCollisions(context) // ESTO CARGA EL JSON DE MUROS
     loadMetroStations(context)
     loadMetrobusStations(context)
+    loadSuburbanoStations(context)
     viewModelScope.launch(Dispatchers.IO) {
         try {
             LandmarkCatalogManager.loadCatalog(context)
