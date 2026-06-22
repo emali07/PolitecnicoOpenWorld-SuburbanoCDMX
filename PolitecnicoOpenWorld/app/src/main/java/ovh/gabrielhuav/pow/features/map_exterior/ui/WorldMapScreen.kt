@@ -1364,9 +1364,9 @@ fun WorldMapScreen(
                                 mapOf("name" to "Fortuna", "lat" to 19.4827, "lng" to -99.1482),
                                 mapOf("name" to "Tlalnepantla", "lat" to 19.5386, "lng" to -99.1947),
                                 mapOf("name" to "San Rafael", "lat" to 19.5605, "lng" to -99.2178),
-                                mapOf("name" to "Lechería", "lat" to 19.6087, "lng" to -99.1811),
-                                mapOf("name" to "Tultitlán", "lat" to 19.6465, "lng" to -99.1688),
-                                mapOf("name" to "Cuautitlán", "lat" to 19.6728, "lng" to -99.1804)
+                                mapOf("name" to "Lecheria", "lat" to 19.6087, "lng" to -99.1811),
+                                mapOf("name" to "Tultitlan", "lat" to 19.6465, "lng" to -99.1688),
+                                mapOf("name" to "Cuautitlan", "lat" to 19.6728, "lng" to -99.1804)
                             )
                             wv.evaluateJavascript("if(typeof updateSuburbano==='function')updateSuburbano(${JSONObject.quote(gson.toJson(suburbanoPayload))});", null)
                         }

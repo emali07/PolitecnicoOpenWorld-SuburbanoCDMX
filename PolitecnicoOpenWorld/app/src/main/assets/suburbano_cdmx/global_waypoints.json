@@ -1,25 +1,25 @@
 [
     {
         "hitboxFrac":  {
-                           "left":  0.440,
-                           "top":  0.155,
-                           "right":  0.520,
-                           "bottom":  0.235
+                           "left":  0.395,
+                           "top":  0.195,
+                           "right":  0.475,
+                           "bottom":  0.275
                        },
         "kind":  "GENERIC",
-        "label":  "CuautitlÃ¡n",
-        "targetRoomId":  "CuautitlÃ¡n"
+        "label":  "Cuautitlan",
+        "targetRoomId":  "Cuautitlan"
     },
     {
         "hitboxFrac":  {
-                           "left":  0.430,
+                           "left":  0.390,
                            "top":  0.270,
-                           "right":  0.510,
+                           "right":  0.470,
                            "bottom":  0.350
                        },
         "kind":  "GENERIC",
-        "label":  "TultitlÃ¡n",
-        "targetRoomId":  "TultitlÃ¡n"
+        "label":  "Tultitlan",
+        "targetRoomId":  "Tultitlan"
     },
     {
         "hitboxFrac":  {
@@ -29,8 +29,8 @@
                            "bottom":  0.42
                        },
         "kind":  "GENERIC",
-        "label":  "LecherÃ­a",
-        "targetRoomId":  "LecherÃ­a"
+        "label":  "Lecheria",
+        "targetRoomId":  "Lecheria"
     },
     {
         "hitboxFrac":  {
@@ -45,9 +45,9 @@
     },
     {
         "hitboxFrac":  {
-                           "left":  0.445,
+                           "left":  0.405,
                            "top":  0.575,
-                           "right":  0.525,
+                           "right":  0.485,
                            "bottom":  0.655
                        },
         "kind":  "GENERIC",
@@ -56,9 +56,9 @@
     },
     {
         "hitboxFrac":  {
-                           "left":  0.475,
+                           "left":  0.435,
                            "top":  0.685,
-                           "right":  0.555,
+                           "right":  0.515,
                            "bottom":  0.765
                        },
         "kind":  "GENERIC",
@@ -67,9 +67,9 @@
     },
     {
         "hitboxFrac":  {
-                           "left":  0.525,
+                           "left":  0.485,
                            "top":  0.805,
-                           "right":  0.605,
+                           "right":  0.565,
                            "bottom":  0.885
                        },
         "kind":  "GENERIC",
