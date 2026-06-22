@@ -431,6 +431,32 @@ internal fun buildHtml(lat: Double, lng: Double, zoom: Int): String = """
             });
         }
 
+
+        // 🚆 ESTACIONES DE SUBURBANO: icono propio del Suburbano CDMX.
+        // Se mantiene separado del Metro para que Buenavista Metro y Buenavista Suburbano
+        // no compartan el mismo asset visual.
+        var suburbanoMarkers = {};
+        function updateSuburbano(jsonStr) {
+            var data = JSON.parse(jsonStr);
+            var currentIds = new Set(data.map(function(s){ return String(s.name); }));
+            for (var id in suburbanoMarkers) {
+                if (!currentIds.has(id)) {
+                    map.removeLayer(suburbanoMarkers[id]);
+                    delete suburbanoMarkers[id];
+                }
+            }
+            data.forEach(function(s) {
+                if (suburbanoMarkers[s.name]) {
+                    suburbanoMarkers[s.name].setLatLng([s.lat, s.lng]);
+                    return;
+                }
+                var sz = 28;
+                var html = '<img src="file:///android_asset/suburbano_cdmx/icon.webp" ' +
+                           'style="width:' + sz + 'px; height:' + sz + 'px; transform:translate(-50%,-50%); display:block;">';
+                var icon = L.divIcon({ html: html, className: '', iconSize: [0,0] });
+                suburbanoMarkers[s.name] = L.marker([s.lat, s.lng], { icon: icon, interactive: false, zIndexOffset: 900 }).addTo(map);
+            });
+        }
         function updateNpcs(data) {
             if (isZooming) return;
             var currentZoom = map.getZoom();

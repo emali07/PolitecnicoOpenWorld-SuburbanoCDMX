@@ -138,8 +138,8 @@ import ovh.gabrielhuav.pow.features.map_exterior.ui.components.Ps4ActionButtonsC
 import ovh.gabrielhuav.pow.features.map_exterior.viewmodel.GameAction
 import ovh.gabrielhuav.pow.features.map_exterior.viewmodel.MapProvider
 import ovh.gabrielhuav.pow.features.map_exterior.viewmodel.ZOOM_GAMEPLAY_OSM
-// REFACTOR: funciones del VM extraídas a parciales (WorldMapProviders/Designer) →
-// ahora son extensiones y requieren import explícito desde el paquete ui.
+// REFACTOR: funciones del VM extraÃƒÂ­das a parciales (WorldMapProviders/Designer) Ã¢â€ â€™
+// ahora son extensiones y requieren import explÃƒÂ­cito desde el paquete ui.
 import ovh.gabrielhuav.pow.features.map_exterior.viewmodel.addLandmarkAtPlayer
 import ovh.gabrielhuav.pow.features.map_exterior.viewmodel.cancelPendingProvider
 import ovh.gabrielhuav.pow.features.map_exterior.viewmodel.commitMapProvider
@@ -186,32 +186,32 @@ import ovh.gabrielhuav.pow.features.map_exterior.viewmodel.togglePrankedy
 import kotlin.math.cos
 import androidx.compose.runtime.DisposableEffect
 
-// ─── CULLING DE NPCs POR DISTANCIA ──────────────────────────────────────────
-// Los NPC siguen viviendo en memoria/simulación; solo dibujamos los que caen
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CULLING DE NPCs POR DISTANCIA Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Los NPC siguen viviendo en memoria/simulaciÃƒÂ³n; solo dibujamos los que caen
 // dentro del viewport visible. El radio escala con el zoom (metros por pixel),
-// así nunca se ocultan NPCs que de verdad están en pantalla.
+// asÃƒÂ­ nunca se ocultan NPCs que de verdad estÃƒÂ¡n en pantalla.
 // FIX "veo NPCs fuera del fog of war": el margen era +15 m sobre el radio de
-// neblina (70 m), así que los civiles se dibujaban hasta 85 m, fuera de la zona
+// neblina (70 m), asÃƒÂ­ que los civiles se dibujaban hasta 85 m, fuera de la zona
 // despejada. A 0 m el culling de sprites coincide EXACTO con el borde del fog
-// (los 3 renderers usan npcVisionRadiusMeters). La policía fuera del fog sigue
-// mostrándose como waypoint 🚓 (handoff limpio en 70 m) y Prankedy aparte.
+// (los 3 renderers usan npcVisionRadiusMeters). La policÃƒÂ­a fuera del fog sigue
+// mostrÃƒÂ¡ndose como waypoint Ã°Å¸Å¡â€œ (handoff limpio en 70 m) y Prankedy aparte.
 internal const val NPC_CULL_MARGIN_M = 0.0
 
-// ══════════════════════════════════════════════════════════════════════════
-//  RADIO DE VISIÓN (neblina). ⬅️  CAMBIA ESTE VALOR PARA VER MÁS O MENOS.
-//  Está en METROS REALES, por eso NO cambia al hacer zoom: siempre ves la misma
-//  distancia alrededor del jugador. Súbelo para ver más lejos, bájalo para menos.
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+//  RADIO DE VISIÃƒâ€œN (neblina). Ã¢Â¬â€¦Ã¯Â¸Â  CAMBIA ESTE VALOR PARA VER MÃƒÂS O MENOS.
+//  EstÃƒÂ¡ en METROS REALES, por eso NO cambia al hacer zoom: siempre ves la misma
+//  distancia alrededor del jugador. SÃƒÂºbelo para ver mÃƒÂ¡s lejos, bÃƒÂ¡jalo para menos.
 internal const val NPC_FOG_VISION_METERS = 70.0
-// ══════════════════════════════════════════════════════════════════════════
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 /** Radio de culling de NPCs: fijo en metros, independiente del zoom. */
 internal fun npcVisionRadiusMeters(): Double = NPC_FOG_VISION_METERS + NPC_CULL_MARGIN_M
 
-/** Metros por pixel del mapa a un zoom/latitud dados (proyección Web Mercator). */
+/** Metros por pixel del mapa a un zoom/latitud dados (proyecciÃƒÂ³n Web Mercator). */
 internal fun metersPerPixel(zoom: Double, latDeg: Double): Double =
     156543.03392 * cos(Math.toRadians(latDeg)) / 2.0.pow(zoom)
 
-/** ¿El NPC está dentro del radio del jugador? (aprox. plana, suficiente a esta escala). */
+/** Ã‚Â¿El NPC estÃƒÂ¡ dentro del radio del jugador? (aprox. plana, suficiente a esta escala). */
 internal fun npcWithinRadius(
     npcLat: Double, npcLon: Double, centerLat: Double, centerLon: Double, radiusM: Double
 ): Boolean {
@@ -229,12 +229,12 @@ fun WorldMapScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToInterior: (String) -> Unit = {},
     onRequestSaveGame: () -> Unit = {},
-    // MODO HISTORIA: reintentar la misión fallida sin volver al menú (recarga el slot activo).
+    // MODO HISTORIA: reintentar la misiÃƒÂ³n fallida sin volver al menÃƒÂº (recarga el slot activo).
     onRetryMission: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    // Modo Desarrollador: si está APAGADO se ocultan los botones de prueba del menú de Opciones
-    // (Teletransportarse, Diseñador/Debug, Activar Apocalipsis, Desactivar Prankedy). Se lee al entrar.
+    // Modo Desarrollador: si estÃƒÂ¡ APAGADO se ocultan los botones de prueba del menÃƒÂº de Opciones
+    // (Teletransportarse, DiseÃƒÂ±ador/Debug, Activar Apocalipsis, Desactivar Prankedy). Se lee al entrar.
     val devModeContext = androidx.compose.ui.platform.LocalContext.current
     val developerMode = remember { ovh.gabrielhuav.pow.data.repository.SettingsRepository(devModeContext).getDeveloperMode() }
     val roadNetwork by viewModel.roadNetworkFlow.collectAsState()
@@ -243,12 +243,12 @@ fun WorldMapScreen(
     val base64Cache = remember { mutableStateMapOf<String, String>() }
     val widthCache = remember { mutableStateMapOf<String, Float>() }
     val heightCache = remember { mutableStateMapOf<String, Float>() }
-    // OPT memoria gama baja (≤2 GB): esta caché de drawables (NPCs, patrullas, balas,
-    // collectibles…) se indexa por FIRMA VISUAL (incluye salud/zoom/frame), así que en
-    // sesiones largas crecía SIN LÍMITE y podía agotar la RAM (OOM). La acotamos con un
-    // LRU por orden de acceso (mismo patrón que googleMapsIconCache): al pasar el tope se
-    // descarta la entrada más vieja; si vuelve a hacer falta se regenera (idéntico en
-    // pantalla). Sigue siendo un MutableMap, así que getOrPut/iterator no cambian.
+    // OPT memoria gama baja (Ã¢â€°Â¤2 GB): esta cachÃƒÂ© de drawables (NPCs, patrullas, balas,
+    // collectiblesÃ¢â‚¬Â¦) se indexa por FIRMA VISUAL (incluye salud/zoom/frame), asÃƒÂ­ que en
+    // sesiones largas crecÃƒÂ­a SIN LÃƒÂMITE y podÃƒÂ­a agotar la RAM (OOM). La acotamos con un
+    // LRU por orden de acceso (mismo patrÃƒÂ³n que googleMapsIconCache): al pasar el tope se
+    // descarta la entrada mÃƒÂ¡s vieja; si vuelve a hacer falta se regenera (idÃƒÂ©ntico en
+    // pantalla). Sigue siendo un MutableMap, asÃƒÂ­ que getOrPut/iterator no cambian.
     val nativeDrawableCache = remember {
         object : java.util.LinkedHashMap<String, android.graphics.drawable.Drawable>(128, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, android.graphics.drawable.Drawable>?): Boolean {
@@ -274,7 +274,7 @@ fun WorldMapScreen(
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { viewModel.importLandmarksFromUri(context, it) }
     }
-    // Editor del Debug Interiores: exportar/importar la geometría editada (colisiones + caminos).
+    // Editor del Debug Interiores: exportar/importar la geometrÃƒÂ­a editada (colisiones + caminos).
     val collisionsExportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let { viewModel.exportDebugEditsToUri(context, it) }
     }
@@ -285,12 +285,12 @@ fun WorldMapScreen(
     val landmarkBitmapCache = remember { mutableMapOf<String, android.graphics.Bitmap?>() }
     var hasTriggeredNativePan by remember { mutableStateOf(false) }
 
-    // Nuevos estados para las interacciones del Diseñador
+    // Nuevos estados para las interacciones del DiseÃƒÂ±ador
     var showDesignerHint by remember { mutableStateOf(false) }
     var showExitDesignerConfirm by remember { mutableStateOf(false) }
     var originalLandmarkState by remember { mutableStateOf<ovh.gabrielhuav.pow.domain.models.Landmark?>(null) }
 
-    // Efecto para controlar la leyenda efímera de 3 segundos
+    // Efecto para controlar la leyenda efÃƒÂ­mera de 3 segundos
     LaunchedEffect(uiState.isDesignerMode) {
         if (uiState.isDesignerMode) {
             showDesignerHint = true
@@ -314,7 +314,7 @@ fun WorldMapScreen(
         viewModel.showInitialHealthBar()
     }
 
-    //Configuración de ciclo de vida de la skin
+    //ConfiguraciÃƒÂ³n de ciclo de vida de la skin
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
@@ -327,7 +327,7 @@ fun WorldMapScreen(
     }
 
     // Cuando el video de carga termina y hay un destino pendiente, navegar.
-    // Si la interacción fue con la mano (pendingZombieMinigame), vamos al minijuego
+    // Si la interacciÃƒÂ³n fue con la mano (pendingZombieMinigame), vamos al minijuego
     // de zombis (que arranca en el lobby/croquis). Si no, al interior normal.
     LaunchedEffect(uiState.showZombiVideo, uiState.pendingInteriorDestination) {
         val target = uiState.pendingInteriorDestination
@@ -370,24 +370,27 @@ fun WorldMapScreen(
         )
     }
     val webViewRef = remember { mutableStateOf<WebView?>(null) }
-    // OPT gama baja: última lista de NPCs enviada al WebView. Solo reenviamos al JS
-    // cuando la lista cambia (~10 Hz), no en cada recomposición por moverse el jugador.
+    // OPT gama baja: ÃƒÂºltima lista de NPCs enviada al WebView. Solo reenviamos al JS
+    // cuando la lista cambia (~10 Hz), no en cada recomposiciÃƒÂ³n por moverse el jugador.
     val lastWebNpcHolder = remember { arrayOfNulls<List<ovh.gabrielhuav.pow.domain.models.Npc>>(1) }
     // OPT FPS web (ahora proveedor por defecto): la lista de landmarks solo cambia al
     // editarlos/cargarlos, pero su JSON se serializaba y enviaba al WebView en CADA frame.
-    // Guardamos la última referencia para reenviar updateLandmarks solo cuando cambie.
+    // Guardamos la ÃƒÂºltima referencia para reenviar updateLandmarks solo cuando cambie.
     val lastWebLandmarkHolder = remember { arrayOfNulls<List<ovh.gabrielhuav.pow.domain.models.Landmark>>(1) }
-    // Heartbeat: re-enviar landmarks al WebView cada ~45 frames por si el primer envío
-    // (al cambiar la lista) llegó antes de que el HTML definiera updateLandmarks.
+    // Heartbeat: re-enviar landmarks al WebView cada ~45 frames por si el primer envÃƒÂ­o
+    // (al cambiar la lista) llegÃƒÂ³ antes de que el HTML definiera updateLandmarks.
     val webLmTick = remember { intArrayOf(0) }
     // Si en el frame anterior se enviaron waypoints de patrulla al WebView, para poder
-    // limpiarlos al dejar de estar buscado sin spamear updatePolice cuando no hay policías.
+    // limpiarlos al dejar de estar buscado sin spamear updatePolice cuando no hay policÃƒÂ­as.
     val lastWebPoliceHolder = remember { booleanArrayOf(false) }
     val lastWebZombieHolder = remember { booleanArrayOf(false) }
-    // 🚇 Estaciones de metro (estáticas): se reenvían al WebView solo al cambiar la lista
+    // Ã°Å¸Å¡â€¡ Estaciones de metro (estÃƒÂ¡ticas): se reenvÃƒÂ­an al WebView solo al cambiar la lista
     // (+ heartbeat), como los landmarks. El icono se carga del asset metro_cdmx/icon.webp.
     val lastWebMetroHolder = remember { arrayOfNulls<List<ovh.gabrielhuav.pow.domain.models.MetroStation>>(1) }
     val webMetroTick = remember { intArrayOf(0) }
+    // Ã°Å¸Å¡â€  Estaciones de Suburbano: capa separada del Metro en el mapa web.
+    val lastWebSuburbanoHolder = remember { arrayOfNulls<List<ovh.gabrielhuav.pow.domain.models.SuburbanoStation>>(1) }
+    val webSuburbanoTick = remember { intArrayOf(0) }
     // Debug Interiores (web): solo reenviamos el navGraph al WebView cuando cambia el
     // estado del overlay o la lista de landmarks (no por frame).
     val lastWebIpOn = remember { booleanArrayOf(false) }
@@ -395,19 +398,19 @@ fun WorldMapScreen(
     val lastWebIpColl = remember { arrayOfNulls<ovh.gabrielhuav.pow.domain.models.ExteriorCollisionsConfig>(1) }
     val nativeMapRef = remember { mutableStateOf<MapView?>(null) }
 
-    // ─── ESTADO DEL MENÚ DE OPCIONES (con submenús anidados) ──────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ESTADO DEL MENÃƒÅ¡ DE OPCIONES (con submenÃƒÂºs anidados) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     var optionsExpanded by remember { mutableStateOf(false) }
     var optionsOpenGroup by remember { mutableStateOf<String?>(null) }
-    // NOTA: el menú de Opciones in-game NO cambia la orientación (el juego va SIEMPRE en
-    // horizontal). Solo los menús de RUTA (Ajustes, etc.) permiten rotar — lo gestiona
-    // MainActivity por destino de navegación. Ver 09.
+    // NOTA: el menÃƒÂº de Opciones in-game NO cambia la orientaciÃƒÂ³n (el juego va SIEMPRE en
+    // horizontal). Solo los menÃƒÂºs de RUTA (Ajustes, etc.) permiten rotar Ã¢â‚¬â€ lo gestiona
+    // MainActivity por destino de navegaciÃƒÂ³n. Ver 09.
 
     LaunchedEffect(uiState.isUserPanningMap) {
         if (!uiState.isUserPanningMap) {
             webViewRef.value?.evaluateJavascript("if(typeof exitExplorationMode==='function')exitExplorationMode();", null)
         } else {
-            // Al arrastrar el mapa, abrir el menú directamente en el submenú "Mapa"
-            // (zoom, centrar, waypoint…). El acordeón cierra cualquier otro submenú.
+            // Al arrastrar el mapa, abrir el menÃƒÂº directamente en el submenÃƒÂº "Mapa"
+            // (zoom, centrar, waypointÃ¢â‚¬Â¦). El acordeÃƒÂ³n cierra cualquier otro submenÃƒÂº.
             optionsExpanded = true
             optionsOpenGroup = "mapa"
         }
@@ -418,23 +421,23 @@ fun WorldMapScreen(
         .background(Color(0xFF0D0D11))
         .systemBarsPadding()) {
 
-        // ─── GATE DE CARGA: no se entra hasta tener ubicación, calles Y mapa ─────
-        // Cuando hay ubicación y calles, se descarga el mapa del proveedor actual.
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GATE DE CARGA: no se entra hasta tener ubicaciÃƒÂ³n, calles Y mapa Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        // Cuando hay ubicaciÃƒÂ³n y calles, se descarga el mapa del proveedor actual.
         LaunchedEffect(uiState.currentLocation != null, uiState.isRoadNetworkReady) {
             if (uiState.currentLocation != null && uiState.isRoadNetworkReady) {
                 viewModel.prepareMapForEntry()
             }
         }
-        // El mundo NO se revela hasta que la ESCENA esté REALMENTE lista: tiles + calles + el/los
+        // El mundo NO se revela hasta que la ESCENA estÃƒÂ© REALMENTE lista: tiles + calles + el/los
         // landmark(s) cercano(s) DECODIFICADO(S) (p. ej. la ENTRADA de la ESCOM) + NPCs/coches ya
-        // sembrados. Así la pantalla de carga dura lo necesario (más en gama baja) y no se entra
+        // sembrados. AsÃƒÂ­ la pantalla de carga dura lo necesario (mÃƒÂ¡s en gama baja) y no se entra
         // "en blanco" ni sin coches/NPCs.
         var sceneReady by remember { mutableStateOf(false) }
         // Reinicia el gate en cada (re)carga del mundo (teleport, volver de interior).
         LaunchedEffect(uiState.isMapReady) { if (!uiState.isMapReady) sceneReady = false }
         // SONDEO: con tiles+calles listos, decodifica los assets de landmarks cercanos y espera a
-        // que (1) exista al menos un landmark cercano y TODOS estén decodificados, y (2) ya haya
-        // NPCs/coches sembrados. Timeout de seguridad de 15 s para no atascar JAMÁS la carga.
+        // que (1) exista al menos un landmark cercano y TODOS estÃƒÂ©n decodificados, y (2) ya haya
+        // NPCs/coches sembrados. Timeout de seguridad de 15 s para no atascar JAMÃƒÂS la carga.
         LaunchedEffect(uiState.isMapReady, uiState.isRoadNetworkReady) {
             if (!uiState.isMapReady || !uiState.isRoadNetworkReady) return@LaunchedEffect
             val start = System.currentTimeMillis()
@@ -446,7 +449,7 @@ fun WorldMapScreen(
                         kotlin.math.abs(it.location.latitude - loc.latitude) < 0.02 &&
                             kotlin.math.abs(it.location.longitude - loc.longitude) < 0.02
                     }
-                    // Decodifica (una vez) los assets de landmarks que falten en la caché.
+                    // Decodifica (una vez) los assets de landmarks que falten en la cachÃƒÂ©.
                     for (lm in nearby) {
                         if (landmarkBitmapCache.containsKey(lm.assetPath)) continue
                         val bmp = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -463,7 +466,7 @@ fun WorldMapScreen(
                     val landmarksOk = nearby.isNotEmpty() &&
                         nearby.all { landmarkBitmapCache.containsKey(it.assetPath) }
                     val npcsOk = uiState.npcs.isNotEmpty()
-                    // DIAGNÓSTICO (POW_DBG, cada ~1 s): qué está pendiente para soltar la carga.
+                    // DIAGNÃƒâ€œSTICO (POW_DBG, cada ~1 s): quÃƒÂ© estÃƒÂ¡ pendiente para soltar la carga.
                     val nowLog = System.currentTimeMillis()
                     if (nowLog - lastLog > 1000L) {
                         lastLog = nowLog
@@ -478,9 +481,9 @@ fun WorldMapScreen(
                     }
                 }
                 // Timeout de seguridad: nunca dejar al jugador atrapado en la carga. Generoso (30 s)
-                // para gama baja: que dé tiempo a sembrar NPCs/coches y decodificar landmarks.
+                // para gama baja: que dÃƒÂ© tiempo a sembrar NPCs/coches y decodificar landmarks.
                 if (System.currentTimeMillis() - start > 30000L) {
-                    android.util.Log.w("POW_DBG", "gate: TIMEOUT 30s — se entra aunque falten assets (npcs=${uiState.npcs.size})")
+                    android.util.Log.w("POW_DBG", "gate: TIMEOUT 30s Ã¢â‚¬â€ se entra aunque falten assets (npcs=${uiState.npcs.size})")
                     sceneReady = true; break
                 }
                 kotlinx.coroutines.delay(200)
@@ -510,7 +513,7 @@ fun WorldMapScreen(
                 }
             }
 
-            // Progreso compuesto: ubicación → calles → tiles del mapa → NPCs/edificios.
+            // Progreso compuesto: ubicaciÃƒÂ³n Ã¢â€ â€™ calles Ã¢â€ â€™ tiles del mapa Ã¢â€ â€™ NPCs/edificios.
             val progress = when {
                 uiState.isLoadingLocation -> 0.05f
                 !uiState.isRoadNetworkReady -> 0.25f
@@ -563,7 +566,7 @@ fun WorldMapScreen(
             return@Box
         }
 
-        // ───── CAPA 1: MAPA ────────────────────────────────────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CAPA 1: MAPA Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         when (uiState.mapProvider) {
             MapProvider.OSM -> {
                 NativeOsmMap(
@@ -597,18 +600,18 @@ fun WorldMapScreen(
                             .tilt(0f)
                             .build()
 
-                        // OPT FPS Google nativo: la posición del jugador cambia ~30 Hz; animar
+                        // OPT FPS Google nativo: la posiciÃƒÂ³n del jugador cambia ~30 Hz; animar
                         // (120 ms) en CADA cambio encadenaba animaciones que se cancelaban entre
-                        // sí (thrash de la cámara). move() reposiciona al instante: igual de fluido
-                        // (las posiciones ya llegan a 30 Hz) y mucho más barato.
+                        // sÃƒÂ­ (thrash de la cÃƒÂ¡mara). move() reposiciona al instante: igual de fluido
+                        // (las posiciones ya llegan a 30 Hz) y mucho mÃƒÂ¡s barato.
                         cameraPositionState.move(com.google.android.gms.maps.CameraUpdateFactory.newCameraPosition(newPosition))
                     }
                 }
 
                 // Canal de retorno del zoom por gesto (pinch) en Google native: solo cuando
-                // el movimiento de cámara lo inició el USUARIO, propagamos el nuevo zoom al
+                // el movimiento de cÃƒÂ¡mara lo iniciÃƒÂ³ el USUARIO, propagamos el nuevo zoom al
                 // estado para que no rebote al seguir al jugador. Los movimientos
-                // programáticos (seguimiento/zoom por botón) se ignoran.
+                // programÃƒÂ¡ticos (seguimiento/zoom por botÃƒÂ³n) se ignoran.
                 LaunchedEffect(cameraPositionState) {
                     snapshotFlow { cameraPositionState.position.zoom }
                         .collect { z ->
@@ -717,8 +720,8 @@ fun WorldMapScreen(
                             }
                         }
                     }
-                    // 🚇 ESTACIONES DE METRO: icono de la red CDMX en cada estación (paridad con
-                    // OSM nativo / web). Marcador estático de tamaño fijo (~24 dp).
+                    // Ã°Å¸Å¡â€¡ ESTACIONES DE METRO: icono de la red CDMX en cada estaciÃƒÂ³n (paridad con
+                    // OSM nativo / web). Marcador estÃƒÂ¡tico de tamaÃƒÂ±o fijo (~24 dp).
                     val metroIconG = remember {
                         try {
                             val raw = context.assets.open("metro_cdmx/icon.webp").use { android.graphics.BitmapFactory.decodeStream(it) }
@@ -763,10 +766,10 @@ fun WorldMapScreen(
                         val currentZoom = uiState.zoomLevel
                         val renderZoom = round(currentZoom * 2) / 2.0
 
-                        // Burbuja 💬 (remate Misión 2: policías que "platican"). Icono cacheado una vez.
+                        // Burbuja Ã°Å¸â€™Â¬ (remate MisiÃƒÂ³n 2: policÃƒÂ­as que "platican"). Icono cacheado una vez.
                         val talkBubbleIcon = remember {
                             val px = (22 * screenDensity).toInt()
-                            val d = emojiToDrawable(context, "💬", px)
+                            val d = emojiToDrawable(context, "Ã°Å¸â€™Â¬", px)
                             val bm = android.graphics.Bitmap.createBitmap(
                                 d.intrinsicWidth.coerceAtLeast(1), d.intrinsicHeight.coerceAtLeast(1),
                                 android.graphics.Bitmap.Config.ARGB_8888
@@ -775,7 +778,7 @@ fun WorldMapScreen(
                             BitmapDescriptorFactory.fromBitmap(bm)
                         }
 
-                        // Culling por neblina: solo se dibujan los NPC dentro del radio de visión (fijo en metros).
+                        // Culling por neblina: solo se dibujan los NPC dentro del radio de visiÃƒÂ³n (fijo en metros).
                         val centerCull = uiState.currentLocation
                         val cullRadiusM = centerCull?.let { npcVisionRadiusMeters() }
 
@@ -788,10 +791,10 @@ fun WorldMapScreen(
                                 val qHealth = npc.health.toInt()
                                 // "Optimizar para gama baja": TODOS los NPCs como emoji (sin sprites).
                                 val fullEmoji = if (uiState.npcFullEmoji) when (npc.type) {
-                                    NpcType.CAR, NpcType.POLICE_CAR -> "🚗"
-                                    ovh.gabrielhuav.pow.domain.models.NpcType.ZOMBIE -> "🧟"
-                                    NpcType.POLICE_COP -> "👮"
-                                    else -> "🧍"
+                                    NpcType.CAR, NpcType.POLICE_CAR -> "Ã°Å¸Å¡â€”"
+                                    ovh.gabrielhuav.pow.domain.models.NpcType.ZOMBIE -> "Ã°Å¸Â§Å¸"
+                                    NpcType.POLICE_COP -> "Ã°Å¸â€˜Â®"
+                                    else -> "Ã°Å¸Â§Â"
                                 } else null
                                 val cacheKey = when {
                                     fullEmoji != null -> "GM_FULL_EMOJI_$fullEmoji"
@@ -878,7 +881,7 @@ fun WorldMapScreen(
                                                 context, isAttacking, timeMs, screenDensity, npc.facingRight
                                             ) as android.graphics.drawable.Drawable?
                                             if (d == null) {
-                                                d = emojiToDrawable(context, "👮", exactPixels)
+                                                d = emojiToDrawable(context, "Ã°Å¸â€˜Â®", exactPixels)
                                             }
                                             d = drawHealthBarOnDrawable(context, d, npc.health, npc.isDying)
                                             d
@@ -929,7 +932,7 @@ fun WorldMapScreen(
                                     flat = true,
                                     alpha = if (npc.isDying) 0.5f else 1.0f
                                 )
-                                // Burbuja 💬 flotando encima mientras el NPC "platica" (remate Misión 2).
+                                // Burbuja Ã°Å¸â€™Â¬ flotando encima mientras el NPC "platica" (remate MisiÃƒÂ³n 2).
                                 // `remember` SIEMPRE se llama (no condicional); solo el Marker es condicional.
                                 val bubbleState = remember { MarkerState(position = position) }
                                 bubbleState.position = position
@@ -946,15 +949,15 @@ fun WorldMapScreen(
                         }
                     }
 
-                    // ─── WAYPOINTS DE ZOMBIS (fuera del fog, modo apocalipsis) ───
-                    // Paridad con OSM nativo/web: 🧟 + línea ROJA punteada jugador→zombi para
-                    // los zombis FUERA de tu campo de visión (Google Maps nativo).
+                    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ WAYPOINTS DE ZOMBIS (fuera del fog, modo apocalipsis) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+                    // Paridad con OSM nativo/web: Ã°Å¸Â§Å¸ + lÃƒÂ­nea ROJA punteada jugadorÃ¢â€ â€™zombi para
+                    // los zombis FUERA de tu campo de visiÃƒÂ³n (Google Maps nativo).
                     run {
                         val plocG = uiState.currentLocation
                         if (plocG != null && uiState.globalZombieMode) {
                             val zombieWpIconG = remember {
                                 val px = (26 * context.resources.displayMetrics.density).toInt()
-                                val d = emojiToDrawable(context, "🧟", px)
+                                val d = emojiToDrawable(context, "Ã°Å¸Â§Å¸", px)
                                 val bm = android.graphics.Bitmap.createBitmap(
                                     d.intrinsicWidth.coerceAtLeast(1), d.intrinsicHeight.coerceAtLeast(1),
                                     android.graphics.Bitmap.Config.ARGB_8888
@@ -1074,19 +1077,19 @@ fun WorldMapScreen(
                             uiState.currentLocation?.let { wv.evaluateJavascript("if(typeof updateMapView==='function')updateMapView(${it.latitude}, ${it.longitude}, ${uiState.zoomLevel});", null) }
                         }
                         uiState.currentLocation?.let { wv.evaluateJavascript("if(typeof updatePlayerMarker==='function')updatePlayerMarker(${it.latitude}, ${it.longitude}, ${uiState.isUserPanningMap});", null) }
-                        // Zoom automático por estado: sync explícito e incondicional (el JS
+                        // Zoom automÃƒÂ¡tico por estado: sync explÃƒÂ­cito e incondicional (el JS
                         // decide si aplica; respeta el pinch reciente del usuario).
                         wv.evaluateJavascript("if(typeof syncZoom==='function')syncZoom(${uiState.zoomLevel});", null)
-                        // Neblina anclada al jugador (se redibuja también en cada gesto vía JS).
+                        // Neblina anclada al jugador (se redibuja tambiÃƒÂ©n en cada gesto vÃƒÂ­a JS).
                         uiState.currentLocation?.let { wv.evaluateJavascript("if(typeof setPlayerFog==='function')setPlayerFog(${it.latitude}, ${it.longitude});", null) }
                         wv.evaluateJavascript("if(typeof setDesignerMode==='function')setDesignerMode(${uiState.isDesignerMode});", null)
-                        // Lápiz seleccionado (Modo Diseñador web): tinta el ✏️ del landmark activo.
+                        // LÃƒÂ¡piz seleccionado (Modo DiseÃƒÂ±ador web): tinta el Ã¢Å“ÂÃ¯Â¸Â del landmark activo.
                         val selLmJs = uiState.selectedLandmarkId?.let { "'$it'" } ?: "null"
                         wv.evaluateJavascript("if(typeof setSelectedLandmark==='function')setSelectedLandmark($selLmJs);", null)
-                        // OPT FPS web: el contenedor solo se agranda (para rotación) al CONDUCIR; a
-                        // pie es del tamaño de la pantalla. El JS ignora llamadas repetidas (guard
-                        // _driving), así que llamarlo cada frame es barato y robusto (se auto-corrige
-                        // aunque se pierda una transición a pie↔conducir).
+                        // OPT FPS web: el contenedor solo se agranda (para rotaciÃƒÂ³n) al CONDUCIR; a
+                        // pie es del tamaÃƒÂ±o de la pantalla. El JS ignora llamadas repetidas (guard
+                        // _driving), asÃƒÂ­ que llamarlo cada frame es barato y robusto (se auto-corrige
+                        // aunque se pierda una transiciÃƒÂ³n a pieÃ¢â€ â€conducir).
                         wv.evaluateJavascript("if(typeof setMapOversize==='function')setMapOversize(${uiState.isDriving});", null)
                         val mapRot = if (uiState.isDriving) -uiState.vehicleRotation else 0f
                         wv.evaluateJavascript("if(typeof setMapRotation==='function')setMapRotation(${mapRot});", null)
@@ -1100,8 +1103,8 @@ fun WorldMapScreen(
                             MapProvider.OSM_WEB        -> "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                             else -> "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
                         }
-                        // Zoom máximo REAL de cada proveedor: a partir de ahí Leaflet escala
-                        // (over-zoom). CARTO sirve z20 → más detalle de calles que OSM (z19).
+                        // Zoom mÃƒÂ¡ximo REAL de cada proveedor: a partir de ahÃƒÂ­ Leaflet escala
+                        // (over-zoom). CARTO sirve z20 Ã¢â€ â€™ mÃƒÂ¡s detalle de calles que OSM (z19).
                         val tileMaxNative = when (uiState.mapProvider) {
                             MapProvider.CARTO_VOYAGER, MapProvider.CARTO_DB_DARK,
                             MapProvider.CARTO_DB_LIGHT -> 20
@@ -1118,7 +1121,7 @@ fun WorldMapScreen(
 
                         // Culling por distancia: solo enviamos al WebView los NPC dentro del
                         // viewport. Evita generar bitmaps/base64 y marcadores JS para NPC lejanos.
-                        // OPT: solo cuando la lista de NPCs cambió (no en cada recomposición).
+                        // OPT: solo cuando la lista de NPCs cambiÃƒÂ³ (no en cada recomposiciÃƒÂ³n).
                         if (uiState.npcs !== lastWebNpcHolder[0]) {
                           lastWebNpcHolder[0] = uiState.npcs
                         val centerCullW = uiState.currentLocation
@@ -1133,12 +1136,12 @@ fun WorldMapScreen(
                         val npcPayloads = visibleNpcs.map { npc ->
                             if (uiState.npcFullEmoji) {
                                 // "Optimizar para gama baja": TODOS los NPCs como emoji. No se genera
-                                // ningún sprite/bitmap de personaje: solo un bitmap por emoji (cacheado).
+                                // ningÃƒÂºn sprite/bitmap de personaje: solo un bitmap por emoji (cacheado).
                                 val emoji = when (npc.type) {
-                                    NpcType.CAR, NpcType.POLICE_CAR -> "🚗"
-                                    NpcType.ZOMBIE -> "🧟"
-                                    NpcType.POLICE_COP -> "👮"
-                                    else -> "🧍"
+                                    NpcType.CAR, NpcType.POLICE_CAR -> "Ã°Å¸Å¡â€”"
+                                    NpcType.ZOMBIE -> "Ã°Å¸Â§Å¸"
+                                    NpcType.POLICE_COP -> "Ã°Å¸â€˜Â®"
+                                    else -> "Ã°Å¸Â§Â"
                                 }
                                 val cacheKey = "full_emoji_${emoji}_${density}"
                                 val base64Image = base64Cache[cacheKey]
@@ -1170,8 +1173,8 @@ fun WorldMapScreen(
                                     health = webHp, isDying = npc.isDying
                                 )
                             } else if (npc.type == NpcType.CAR || npc.type == NpcType.POLICE_CAR) {
-                                // FIX web: la PATRULLA (POLICE_CAR) caía al `else` y se dibujaba con
-                                // su SVG genérico en vez del asset real. Ahora la tratamos como un
+                                // FIX web: la PATRULLA (POLICE_CAR) caÃƒÂ­a al `else` y se dibujaba con
+                                // su SVG genÃƒÂ©rico en vez del asset real. Ahora la tratamos como un
                                 // coche-imagen: generamos su sprite (PoliceSpriteManager, sin tintar),
                                 // lo registramos en imgCache y lo enviamos como tipo "CAR".
                                 val isPolice = npc.type == NpcType.POLICE_CAR || npc.isPoliceSkin
@@ -1196,7 +1199,7 @@ fun WorldMapScreen(
                                             bitmap.compress(android.graphics.Bitmap.CompressFormat.WEBP, 100, out)
                                             val b64 = "data:image/webp;base64," + android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP)
 
-                                            // IMPORTANTE: Actualizar el estado en el hilo principal dispara la recomposición
+                                            // IMPORTANTE: Actualizar el estado en el hilo principal dispara la recomposiciÃƒÂ³n
                                             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                                                 widthCache[cacheKey] = w
                                                 heightCache[cacheKey] = h
@@ -1235,8 +1238,8 @@ fun WorldMapScreen(
                             } else if (npc.type == ovh.gabrielhuav.pow.domain.models.NpcType.ZOMBIE) {
                                 // FIX web: el frame DEBE acotarse a los 9 del walk (% 9), igual que
                                 // getZombieDrawable. Antes era (timeMs/220).toInt() (entero creciente),
-                                // así que cada frame creaba un cacheKey nuevo cuya imagen base64 (async)
-                                // nunca llegaba a registrarse a tiempo → el zombi no se veía en web.
+                                // asÃƒÂ­ que cada frame creaba un cacheKey nuevo cuya imagen base64 (async)
+                                // nunca llegaba a registrarse a tiempo Ã¢â€ â€™ el zombi no se veÃƒÂ­a en web.
                                 val frameIndex = ((timeMs / 220L) % 9L).toInt()
                                 // El rol entra en la clave para que cada tinte (palette swap) se cachee aparte.
                                 val cacheKey = "ZOMBIE_WEB_${npc.zombieRole.name}_${npc.facingRight}_${frameIndex}_D${npc.isDying}"
@@ -1264,7 +1267,7 @@ fun WorldMapScreen(
                                     registeredWebImages.add(cacheKey)
                                 }
                                 // Vida normalizada a 0-100 (el JS dibuja la barra asumiendo max 100):
-                                // así la barra del web es proporcional al maxHealth del rol.
+                                // asÃƒÂ­ la barra del web es proporcional al maxHealth del rol.
                                 val webHp = if (npc.maxHealth > 0f) (npc.health / npc.maxHealth * 100f) else npc.health
                                 NpcWebPayload(npc.id, npc.location.latitude, npc.location.longitude, 0f, "MODULAR", cacheKey, null, 1, null, health = webHp, isDying = npc.isDying)
                             } else if (npc.type == NpcType.POLICE_COP) {
@@ -1280,7 +1283,7 @@ fun WorldMapScreen(
                                             context, isAttacking, timeMs, density, npc.facingRight
                                         )?.bitmap
                                         if (bitmap == null) {
-                                            bitmap = (emojiToDrawable(context, "👮", px) as? android.graphics.drawable.BitmapDrawable)?.bitmap
+                                            bitmap = (emojiToDrawable(context, "Ã°Å¸â€˜Â®", px) as? android.graphics.drawable.BitmapDrawable)?.bitmap
                                         }
                                         if (bitmap != null) {
                                             val out = java.io.ByteArrayOutputStream()
@@ -1304,10 +1307,10 @@ fun WorldMapScreen(
                         }
 
                         wv.evaluateJavascript("if(typeof updateNpcs==='function')updateNpcs(${gson.toJson(npcPayloads)});", null)
-                        } // fin guard web: lista de NPCs sin cambios → no se reenvía al WebView
+                        } // fin guard web: lista de NPCs sin cambios Ã¢â€ â€™ no se reenvÃƒÂ­a al WebView
 
-                        // BURBUJAS 💬 de "platica" (remate Misión 2): se envían CADA frame (fuera del
-                        // guard) para seguir la posición de cada policía mientras dura `talkingUntil`.
+                        // BURBUJAS Ã°Å¸â€™Â¬ de "platica" (remate MisiÃƒÂ³n 2): se envÃƒÂ­an CADA frame (fuera del
+                        // guard) para seguir la posiciÃƒÂ³n de cada policÃƒÂ­a mientras dura `talkingUntil`.
                         val nowBubble = System.currentTimeMillis()
                         val talkPayload = uiState.npcs
                             .filter { it.talkingUntil > nowBubble }
@@ -1317,7 +1320,7 @@ fun WorldMapScreen(
                         wv.evaluateJavascript("if(typeof updateCollectibles==='function')updateCollectibles(${JSONObject.quote(collectiblesJson)});", null)
 
                         // OPT FPS web: serializar y reenviar landmarks SOLO cuando cambian
-                        // (+ heartbeat). Antes se hacía gson.toJson + evaluateJavascript en CADA
+                        // (+ heartbeat). Antes se hacÃƒÂ­a gson.toJson + evaluateJavascript en CADA
                         // frame aunque los landmarks no cambian durante el juego.
                         webLmTick[0]++
                         if (uiState.landmarks !== lastWebLandmarkHolder[0] || webLmTick[0] % 45 == 0) {
@@ -1338,11 +1341,11 @@ fun WorldMapScreen(
                         }
                         val landmarksJson = gson.toJson(landmarksPayload)
                         wv.evaluateJavascript("if(typeof updateLandmarks==='function')updateLandmarks(${JSONObject.quote(landmarksJson)});", null)
-                        } // fin guard landmarks web (solo se reenvían al cambiar / heartbeat)
+                        } // fin guard landmarks web (solo se reenvÃƒÂ­an al cambiar / heartbeat)
 
-                        // 🚇 ESTACIONES DE METRO: icono fijo en cada estación. Estáticas, así que
-                        // solo se reenvían al cambiar la lista (+ heartbeat, por si el primer envío
-                        // llegó antes de que el HTML definiera updateMetro).
+                        // Ã°Å¸Å¡â€¡ ESTACIONES DE METRO: icono fijo en cada estaciÃƒÂ³n. EstÃƒÂ¡ticas, asÃƒÂ­ que
+                        // solo se reenvÃƒÂ­an al cambiar la lista (+ heartbeat, por si el primer envÃƒÂ­o
+                        // llegÃƒÂ³ antes de que el HTML definiera updateMetro).
                         webMetroTick[0]++
                         if (uiState.metroStations !== lastWebMetroHolder[0] || webMetroTick[0] % 45 == 0) {
                             lastWebMetroHolder[0] = uiState.metroStations
@@ -1350,6 +1353,22 @@ fun WorldMapScreen(
                                 mapOf("name" to it.name, "lat" to it.location.latitude, "lng" to it.location.longitude)
                             }
                             wv.evaluateJavascript("if(typeof updateMetro==='function')updateMetro(${JSONObject.quote(gson.toJson(metroPayload))});", null)
+                        }
+
+                        // ðŸš† ESTACIONES DE SUBURBANO: se dibujan igual que Metro, pero con su propio icono.
+                        webSuburbanoTick[0]++
+                        if (uiState.suburbanoStations !== lastWebSuburbanoHolder[0] || webSuburbanoTick[0] % 45 == 0) {
+                            lastWebSuburbanoHolder[0] = uiState.suburbanoStations
+                            val suburbanoPayload = listOf(
+                                mapOf("name" to "Buenavista", "lat" to 19.4473, "lng" to -99.1537),
+                                mapOf("name" to "Fortuna", "lat" to 19.4827, "lng" to -99.1482),
+                                mapOf("name" to "Tlalnepantla", "lat" to 19.5386, "lng" to -99.1947),
+                                mapOf("name" to "San Rafael", "lat" to 19.5605, "lng" to -99.2178),
+                                mapOf("name" to "Lechería", "lat" to 19.6087, "lng" to -99.1811),
+                                mapOf("name" to "Tultitlán", "lat" to 19.6465, "lng" to -99.1688),
+                                mapOf("name" to "Cuautitlán", "lat" to 19.6728, "lng" to -99.1804)
+                            )
+                            wv.evaluateJavascript("if(typeof updateSuburbano==='function')updateSuburbano(${JSONObject.quote(gson.toJson(suburbanoPayload))});", null)
                         }
                         if (uiState.showRoadNetwork) {
                             val roadsPayload = roadNetwork.map { way ->
@@ -1365,9 +1384,9 @@ fun WorldMapScreen(
                             wv.evaluateJavascript("if(typeof updateRoads==='function')updateRoads('[]');", null)
                         }
 
-                        // 🔧 DEBUG INTERIORES (web): dibuja el navGraph de los landmarks (ESCOM)
-                        // para ver por dónde se puede caminar (verde) y por dónde van autos (naranja).
-                        // Convertimos localX/localY → global aquí (el Leaflet no tiene esa geometría).
+                        // Ã°Å¸â€Â§ DEBUG INTERIORES (web): dibuja el navGraph de los landmarks (ESCOM)
+                        // para ver por dÃƒÂ³nde se puede caminar (verde) y por dÃƒÂ³nde van autos (naranja).
+                        // Convertimos localX/localY Ã¢â€ â€™ global aquÃƒÂ­ (el Leaflet no tiene esa geometrÃƒÂ­a).
                         val ipOn = uiState.showInteriorDebugOverlay
                         if (ipOn != lastWebIpOn[0] || (ipOn && (uiState.landmarks !== lastWebIpLm[0] || uiState.exteriorCollisions !== lastWebIpColl[0]))) {
                             lastWebIpOn[0] = ipOn
@@ -1388,7 +1407,7 @@ fun WorldMapScreen(
                                         )
                                     }
                                 }
-                                // Zonas NO caminables (polígonos rojos) + bardas (líneas rojas).
+                                // Zonas NO caminables (polÃƒÂ­gonos rojos) + bardas (lÃƒÂ­neas rojas).
                                 val cfg = uiState.exteriorCollisions
                                 val blocks = cfg?.polygons?.filter { it.nodes.size >= 3 }?.mapIndexed { i, poly ->
                                     mapOf("id" to "blk_$i", "nodes" to poly.nodes.map { mapOf("lat" to it.lat, "lng" to it.lon) })
@@ -1417,18 +1436,18 @@ fun WorldMapScreen(
                             }
                         } else wv.evaluateJavascript("if(typeof updateDestinationRoute==='function')updateDestinationRoute(0, 0, [], false);", null)
 
-                        // MODO HISTORIA: línea GPS roja de campaña (ENCB → ESCOM). Se dibuja/limpia
-                        // según el estado; al llegar a ESCOM el VM la vacía y aquí se borra sola.
+                        // MODO HISTORIA: lÃƒÂ­nea GPS roja de campaÃƒÂ±a (ENCB Ã¢â€ â€™ ESCOM). Se dibuja/limpia
+                        // segÃƒÂºn el estado; al llegar a ESCOM el VM la vacÃƒÂ­a y aquÃƒÂ­ se borra sola.
                         if (uiState.campaignRouteWaypoints.isNotEmpty()) {
                             val campJson = uiState.campaignRouteWaypoints.map { mapOf("lat" to it.latitude, "lng" to it.longitude) }.let { gson.toJson(it) }
                             wv.evaluateJavascript("if(typeof updateCampaignRoute==='function')updateCampaignRoute($campJson);", null)
                         } else wv.evaluateJavascript("if(typeof updateCampaignRoute==='function')updateCampaignRoute([]);", null)
 
                         // Waypoints de patrullas FUERA de la neblina (paridad con OSM nativo):
-                        // 🚓 + línea punteada jugador→patrulla mientras te buscan. Las patrullas
+                        // Ã°Å¸Å¡â€œ + lÃƒÂ­nea punteada jugadorÃ¢â€ â€™patrulla mientras te buscan. Las patrullas
                         // DENTRO de la neblina ya se dibujan como sprite (no llevan waypoint).
                         val plocW = uiState.currentLocation
-                        // Patrullas (mundo libre) + 2 policías de la ESCOLTA de campaña (a pie).
+                        // Patrullas (mundo libre) + 2 policÃƒÂ­as de la ESCOLTA de campaÃƒÂ±a (a pie).
                         val patrolsW = if (plocW != null && uiState.wantedLevel > 0) {
                             uiState.npcs.filter {
                                 (it.type == NpcType.POLICE_CAR ||
@@ -1441,12 +1460,12 @@ fun WorldMapScreen(
                             lastWebPoliceHolder[0] = patrolsW.isNotEmpty()
                             val policePayload = patrolsW.map {
                                 mapOf("id" to it.id, "lat" to it.location.latitude, "lng" to it.location.longitude,
-                                    "emoji" to if (it.type == NpcType.POLICE_COP) "👮" else "🚓")
+                                    "emoji" to if (it.type == NpcType.POLICE_COP) "Ã°Å¸â€˜Â®" else "Ã°Å¸Å¡â€œ")
                             }
                             wv.evaluateJavascript("if(typeof updatePolice==='function')updatePolice(${plocW?.latitude ?: 0.0}, ${plocW?.longitude ?: 0.0}, ${gson.toJson(policePayload)});", null)
                         }
 
-                        // Waypoint del OBJETIVO (🎯) + línea jugador→objetivo (te indica a dónde ir).
+                        // Waypoint del OBJETIVO (Ã°Å¸Å½Â¯) + lÃƒÂ­nea jugadorÃ¢â€ â€™objetivo (te indica a dÃƒÂ³nde ir).
                         val campObjW = uiState.currentObjective
                         val campPlocW = uiState.currentLocation
                         if (campObjW != null && !uiState.objectiveDone && campPlocW != null) {
@@ -1455,8 +1474,8 @@ fun WorldMapScreen(
                             wv.evaluateJavascript("if(typeof updateObjectiveWp==='function')updateObjectiveWp(null,null,null,null);", null)
                         }
 
-                        // Waypoints de ZOMBIS FUERA del fog (paridad con OSM nativo): 🧟 + línea
-                        // ROJA punteada jugador→zombi en modo apocalipsis. Los zombis DENTRO del
+                        // Waypoints de ZOMBIS FUERA del fog (paridad con OSM nativo): Ã°Å¸Â§Å¸ + lÃƒÂ­nea
+                        // ROJA punteada jugadorÃ¢â€ â€™zombi en modo apocalipsis. Los zombis DENTRO del
                         // fog ya se dibujan con su sprite (no llevan waypoint).
                         val zombiesW = if (plocW != null && uiState.globalZombieMode) {
                             uiState.npcs.filter {
@@ -1473,23 +1492,23 @@ fun WorldMapScreen(
                             wv.evaluateJavascript("if(typeof updateZombies==='function')updateZombies(${plocW?.latitude ?: 0.0}, ${plocW?.longitude ?: 0.0}, ${gson.toJson(zombiePayload)});", null)
                         }
 
-                        // ─── PRANKEDY (compañero) en WEB ──────────────────────────────────
-                        // Su sprite NO es un NPC normal (assets propios), así que se dibuja con
-                        // su propio marcador Leaflet. Se envía CADA frame (FUERA del guard de la
+                        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRANKEDY (compaÃƒÂ±ero) en WEB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+                        // Su sprite NO es un NPC normal (assets propios), asÃƒÂ­ que se dibuja con
+                        // su propio marcador Leaflet. Se envÃƒÂ­a CADA frame (FUERA del guard de la
                         // lista de NPCs) porque se mueve suave siguiendo al jugador.
                         run {
                             val pkLoc = uiState.prankedyLocation
                             if (pkLoc != null && !uiState.isDriving) {
                                 val pkTime = timeMs
                                 val pkAnim = uiState.prankedyAnimState
-                                // Índice de frame respetando el intervalo por animación (IDLE va más lento).
+                                // ÃƒÂndice de frame respetando el intervalo por animaciÃƒÂ³n (IDLE va mÃƒÂ¡s lento).
                                 val pkFrame = ovh.gabrielhuav.pow.features.map_exterior.ui.components.PrankedySpriteManager
                                     .currentFrameIndex0(pkAnim, pkTime)
                                 // El bitmap se genera SIEMPRE mirando a la derecha (facingRight = true);
-                                // la orientación la aplica el CSS (transform: scaleX(flip)) en updatePrankedy.
-                                // Antes se volteaba el bitmap Y además el CSS → doble volteo: al ir a la
+                                // la orientaciÃƒÂ³n la aplica el CSS (transform: scaleX(flip)) en updatePrankedy.
+                                // Antes se volteaba el bitmap Y ademÃƒÂ¡s el CSS Ã¢â€ â€™ doble volteo: al ir a la
                                 // izquierda Prankedy acababa mirando a la derecha. Por eso el bitmap NO se
-                                // voltea aquí y la clave de caché ya no depende de facingRight.
+                                // voltea aquÃƒÂ­ y la clave de cachÃƒÂ© ya no depende de facingRight.
                                 val pkKey = "PRANKEDY_WEB_${pkAnim.name}_$pkFrame"
                                 val pkB64 = base64Cache[pkKey]
                                 if (pkB64 == null) {
@@ -1520,7 +1539,7 @@ fun WorldMapScreen(
                             }
                         }
 
-                        // ─── PRANKEDY: proyectil (tanque de gas, p_objeto) en WEB ──────────
+                        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRANKEDY: proyectil (tanque de gas, p_objeto) en WEB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
                         run {
                             val pjStart = uiState.prankedyProjectileStart
                             val pjEnd = uiState.prankedyProjectileTarget
@@ -1560,10 +1579,10 @@ fun WorldMapScreen(
             }
         }
 
-        // ───── CAPA DE DIBUJO DEL EDITOR (Debug Interiores) ─────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CAPA DE DIBUJO DEL EDITOR (Debug Interiores) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         // Va SOBRE el mapa (cualquier renderer: web/OSM/Google) y DEBAJO de los botones y
-        // el panel (que se dibujan después). Con herramienta activa intercepta el toque:
-        // el mapa NO se mueve y dibujas líneas/rectángulos. Con NONE deja pasar el gesto.
+        // el panel (que se dibujan despuÃƒÂ©s). Con herramienta activa intercepta el toque:
+        // el mapa NO se mueve y dibujas lÃƒÂ­neas/rectÃƒÂ¡ngulos. Con NONE deja pasar el gesto.
         if (uiState.showInteriorDebugOverlay) {
             ovh.gabrielhuav.pow.features.map_exterior.ui.components.InteriorDebugDrawSurface(
                 tool = uiState.debugEditTool,
@@ -1577,22 +1596,22 @@ fun WorldMapScreen(
             )
         }
 
-        // ─── CAPA DE NEBLINA (fog of war estilo Age of Empires) — SIEMPRE ACTIVA ──
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CAPA DE NEBLINA (fog of war estilo Age of Empires) Ã¢â‚¬â€ SIEMPRE ACTIVA Ã¢â€â‚¬Ã¢â€â‚¬
         // El radio visible se fija en METROS reales (no cambia con el zoom): se
-        // convierte a píxeles según el zoom actual. Fuera del radio se aplica un
-        // gris translúcido (no negro total), suficiente para ocultar NPCs.
-        // Antes solo se dibujaba con !isUserPanningMap, por eso "desaparecía" al
-        // mover el mapa. Ahora es INCONDICIONAL y el radio se acota al tamaño de
+        // convierte a pÃƒÂ­xeles segÃƒÂºn el zoom actual. Fuera del radio se aplica un
+        // gris translÃƒÂºcido (no negro total), suficiente para ocultar NPCs.
+        // Antes solo se dibujaba con !isUserPanningMap, por eso "desaparecÃƒÂ­a" al
+        // mover el mapa. Ahora es INCONDICIONAL y el radio se acota al tamaÃƒÂ±o de
         // pantalla para que el anillo de neblina nunca quede fuera de cuadro (a
-        // zoom bajo el radio en píxeles podía superar la pantalla y no verse).
+        // zoom bajo el radio en pÃƒÂ­xeles podÃƒÂ­a superar la pantalla y no verse).
         // Para OSM Nativo y proveedores Web la neblina se dibuja DENTRO del mapa
-        // (anclada a la posición real del jugador), así que aquí solo se pinta para
+        // (anclada a la posiciÃƒÂ³n real del jugador), asÃƒÂ­ que aquÃƒÂ­ solo se pinta para
         // el SDK nativo de Google, donde no hay overlay propio.
         if (uiState.mapProvider == MapProvider.GOOGLE_MAPS_NATIVE) run {
             val fogLat = uiState.currentLocation?.latitude ?: 19.5
             val fogMpp = metersPerPixel(uiState.zoomLevel, fogLat)
             // Defensa: nunca dejar que mpp degenerado convierta el radio en Infinity/NaN
-            // (eso pintaría la pantalla entera del color de la neblina).
+            // (eso pintarÃƒÂ­a la pantalla entera del color de la neblina).
             val rawRevealPx = if (fogMpp.isFinite() && fogMpp > 0.0)
                 (NPC_FOG_VISION_METERS / fogMpp).toFloat()
             else 400f
@@ -1606,7 +1625,7 @@ fun WorldMapScreen(
                         colorStops = arrayOf(
                             0.0f to Color.Transparent,
                             (fogRevealPx / outer).coerceIn(0f, 0.99f) to Color.Transparent,
-                            1.0f to Color(0x80222A33) // gris azulado translúcido (~50%)
+                            1.0f to Color(0x80222A33) // gris azulado translÃƒÂºcido (~50%)
                         ),
                         center = center,
                         radius = outer
@@ -1626,9 +1645,9 @@ fun WorldMapScreen(
 
         LowHealthAura(health = viewModel.playerHealth)
 
-        // ─── 💥 FX DE IMPACTO/COLISIÓN ───────────────────────────────────────────
-        // Destello de "💥" en el centro (posición del jugador) cuando un NPC te golpea
-        // o cuando atropellas a alguien, para que la colisión se NOTE.
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Ã°Å¸â€™Â¥ FX DE IMPACTO/COLISIÃƒâ€œN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        // Destello de "Ã°Å¸â€™Â¥" en el centro (posiciÃƒÂ³n del jugador) cuando un NPC te golpea
+        // o cuando atropellas a alguien, para que la colisiÃƒÂ³n se NOTE.
         val impactScale = remember { androidx.compose.animation.core.Animatable(0f) }
         LaunchedEffect(viewModel.impactEffectTrigger) {
             if (viewModel.impactEffectTrigger > 0) {
@@ -1639,15 +1658,15 @@ fun WorldMapScreen(
         }
         if (impactScale.value > 0.01f) {
             Text(
-                text = "💥",
+                text = "Ã°Å¸â€™Â¥",
                 fontSize = 56.sp,
                 modifier = Modifier.align(Alignment.Center).scale(impactScale.value)
             )
         }
 
-        // ─── DESTELLO ROJO DE DAÑO ───────────────────────────────────────────────
-        // En CADA golpe recibido (damagePulseTrigger) parpadea un viñeteado rojo, como
-        // en el modo zombis, para que se note claramente que te hicieron daño.
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DESTELLO ROJO DE DAÃƒâ€˜O Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        // En CADA golpe recibido (damagePulseTrigger) parpadea un viÃƒÂ±eteado rojo, como
+        // en el modo zombis, para que se note claramente que te hicieron daÃƒÂ±o.
         val dmgFlash = remember { androidx.compose.animation.core.Animatable(0f) }
         LaunchedEffect(viewModel.damagePulseTrigger) {
             if (viewModel.damagePulseTrigger > 0) {
@@ -1667,9 +1686,9 @@ fun WorldMapScreen(
             )
         }
 
-        // ─── BARRA DE VIDA FIJA (HUD) ────────────────────────────────────────────
-        // Siempre visible (como en el modo zombis) para que se vea cuánta vida tienes
-        // y cuándo te hacen daño. Arriba a la izquierda, bajo el botón de Ajustes.
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BARRA DE VIDA FIJA (HUD) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        // Siempre visible (como en el modo zombis) para que se vea cuÃƒÂ¡nta vida tienes
+        // y cuÃƒÂ¡ndo te hacen daÃƒÂ±o. Arriba a la izquierda, bajo el botÃƒÂ³n de Ajustes.
         if (!uiState.isDesignerMode) {
             Box(
                 modifier = Modifier
@@ -1699,7 +1718,7 @@ fun WorldMapScreen(
             }
         }
 
-        // ─── NIVEL DE BÚSQUEDA (estrellas estilo GTA) ────────────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NIVEL DE BÃƒÅ¡SQUEDA (estrellas estilo GTA) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         if (uiState.wantedLevel > 0) {
             Row(
                 modifier = Modifier
@@ -1711,7 +1730,7 @@ fun WorldMapScreen(
             ) {
                 repeat(5) { i ->
                     Text(
-                        text = if (i < uiState.wantedLevel) "⭐" else "☆",
+                        text = if (i < uiState.wantedLevel) "Ã¢Â­Â" else "Ã¢Ëœâ€ ",
                         fontSize = 16.sp,
                         color = if (i < uiState.wantedLevel) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.4f)
                     )
@@ -1719,7 +1738,7 @@ fun WorldMapScreen(
             }
         }
 
-        // ─── WIDGET DE OBJETIVO (Modo Historia) ──────────────────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ WIDGET DE OBJETIVO (Modo Historia) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         // Centrado arriba y difuminado para no chocar con los widgets de las esquinas.
         uiState.currentObjective?.let { obj ->
             ObjectivesWidget(
@@ -1730,8 +1749,8 @@ fun WorldMapScreen(
             )
         }
 
-        // ─── MISIÓN FALLIDA (Modo Historia: la policía mató a Prankedy) ──────────
-        // Pantalla a pantalla completa, estilo "WASTED", con el texto EN 2 LÍNEAS.
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MISIÃƒâ€œN FALLIDA (Modo Historia: la policÃƒÂ­a matÃƒÂ³ a Prankedy) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        // Pantalla a pantalla completa, estilo "WASTED", con el texto EN 2 LÃƒÂNEAS.
         if (uiState.showMissionFailed) {
             Box(
                 modifier = Modifier.fillMaxSize().background(Color(0xDD000000)),
@@ -1739,7 +1758,7 @@ fun WorldMapScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "MISIÓN\nFALLIDA",
+                        text = "MISIÃƒâ€œN\nFALLIDA",
                         color = Color(0xFFD32F2F),
                         fontSize = 54.sp,
                         fontWeight = FontWeight.ExtraBold,
@@ -1748,26 +1767,26 @@ fun WorldMapScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(Modifier.height(28.dp))
-                    // REINTENTAR: reinicia la misión en sitio (sin volver a la pantalla de inicio).
+                    // REINTENTAR: reinicia la misiÃƒÂ³n en sitio (sin volver a la pantalla de inicio).
                     Button(
                         onClick = { onRetryMission() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth(0.6f).height(50.dp)
                     ) {
-                        Text("REINTENTAR MISIÓN", color = Color.White, fontWeight = FontWeight.Bold,
+                        Text("REINTENTAR MISIÃƒâ€œN", color = Color.White, fontWeight = FontWeight.Bold,
                             fontSize = 15.sp, letterSpacing = 1.sp)
                     }
                     Spacer(Modifier.height(12.dp))
                     TextButton(onClick = { onNavigateToMainMenu() }) {
-                        Text("Salir al menú", color = Color.White.copy(alpha = 0.85f),
+                        Text("Salir al menÃƒÂº", color = Color.White.copy(alpha = 0.85f),
                             fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
 
-        // ─── AVISO DE CARJACK (te van a bajar del auto) ──────────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ AVISO DE CARJACK (te van a bajar del auto) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         uiState.carjackWarning?.let { warn ->
             Box(
                 modifier = Modifier
@@ -1788,9 +1807,9 @@ fun WorldMapScreen(
             }
         }
 
-        // ─── ESTADO DE PRE-DESCARGA DE LA ZONA (offline) ─────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ESTADO DE PRE-DESCARGA DE LA ZONA (offline) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         // No bloqueante: el jugador puede moverse mientras descarga. Avisa si la
-        // zona quedó incompleta por falta de red (juego offline garantizado solo
+        // zona quedÃƒÂ³ incompleta por falta de red (juego offline garantizado solo
         // cuando termina al 100%).
         if (uiState.zonePrefetchActive || uiState.zoneOfflineWarning || uiState.zoneOfflineReady) {
             val (chipText, chipColor) = when {
@@ -1817,22 +1836,22 @@ fun WorldMapScreen(
         Column(modifier = Modifier.align(Alignment.TopStart).padding(top = 64.dp, start = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             AnimatedVisibility(visible = uiState.showCacheWidget, enter = fadeIn(), exit = fadeOut()) { CacheStatusWidget(roadSource = uiState.roadSource, tileSource = uiState.tileSource, mapProvider = uiState.mapProvider) }
             AnimatedVisibility(visible = uiState.showFpsWidget, enter = fadeIn(), exit = fadeOut()) { CacheChip(label = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_chip_performance), text = "$currentFps FPS", color = if (currentFps >= 24) Color(0xFF4CAF50) else Color(0xFFD32F2F), isLoading = false) }
-            // Widget de nivel de zoom (Ajustes → Interfaz): muestra el zoom actual en vivo
-            // para identificar el nivel óptimo (pinch para cambiarlo).
+            // Widget de nivel de zoom (Ajustes Ã¢â€ â€™ Interfaz): muestra el zoom actual en vivo
+            // para identificar el nivel ÃƒÂ³ptimo (pinch para cambiarlo).
             AnimatedVisibility(visible = uiState.showZoomWidget, enter = fadeIn(), exit = fadeOut()) {
                 CacheChip(label = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_chip_zoom), text = "z = ${"%.1f".format(uiState.zoomLevel)}", color = Color(0xFF7FB2FF), isLoading = false)
             }
-            // Velocímetro (Ajustes → Interfaz): velocidad en km/h, SOLO al conducir.
-            // CALIBRADO a sensación de manejo, no al desplazamiento geográfico real: el
+            // VelocÃƒÂ­metro (Ajustes Ã¢â€ â€™ Interfaz): velocidad en km/h, SOLO al conducir.
+            // CALIBRADO a sensaciÃƒÂ³n de manejo, no al desplazamiento geogrÃƒÂ¡fico real: el
             // avatar recorre el mapa a ~204 km/h reales a tope (movimiento acelerado del
-            // juego), lo que se veía irrealista. Se mapea linealmente MAX_SPEED → 120 km/h.
+            // juego), lo que se veÃƒÂ­a irrealista. Se mapea linealmente MAX_SPEED Ã¢â€ â€™ 120 km/h.
             AnimatedVisibility(visible = uiState.showSpeedometer && uiState.isDriving, enter = fadeIn(), exit = fadeOut()) {
                 val speedAbs = kotlin.math.abs(uiState.vehicleSpeed)
                 val frac = (speedAbs / 0.000017).toFloat().coerceIn(0f, 1f) // MAX_SPEED del coche
                 val kmh = (frac * 120f).roundToInt()
                 CacheChip(
                     label = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_chip_speed),
-                    text = "🚗 $kmh km/h",
+                    text = "Ã°Å¸Å¡â€” $kmh km/h",
                     color = when {
                         frac < 0.5f -> Color(0xFF4CAF50)
                         frac < 0.85f -> Color(0xFFFFB300)
@@ -1841,7 +1860,7 @@ fun WorldMapScreen(
                     isLoading = false
                 )
             }
-            // Widget de coordenadas (Ajustes → Interfaz): X=longitud, Y=latitud, Z=GLOBAL.
+            // Widget de coordenadas (Ajustes Ã¢â€ â€™ Interfaz): X=longitud, Y=latitud, Z=GLOBAL.
             AnimatedVisibility(visible = uiState.showCoordsWidget, enter = fadeIn(), exit = fadeOut()) {
                 val loc = uiState.currentLocation
                 CoordsWidget(
@@ -1865,7 +1884,7 @@ fun WorldMapScreen(
             }
         }
 
-        // Dialogo para la confirmación de salida del modo
+        // Dialogo para la confirmaciÃƒÂ³n de salida del modo
         if (showExitDesignerConfirm) {
             androidx.compose.ui.window.Dialog(onDismissRequest = { showExitDesignerConfirm = false }) {
                 Box(
@@ -1935,10 +1954,10 @@ fun WorldMapScreen(
             }
         }
 
-        // Arriba a la derecha: Ajustes SIEMPRE visible + UN único menú desplegable
-        // que contiene submenús anidados ("menú de menús"). Así no hay botones
-        // sueltos que se sobrepongan con el mapa. Acordeón: abrir un submenú cierra
-        // el otro. Al arrastrar el mapa, se abre solo en el submenú "Mapa".
+        // Arriba a la derecha: Ajustes SIEMPRE visible + UN ÃƒÂºnico menÃƒÂº desplegable
+        // que contiene submenÃƒÂºs anidados ("menÃƒÂº de menÃƒÂºs"). AsÃƒÂ­ no hay botones
+        // sueltos que se sobrepongan con el mapa. AcordeÃƒÂ³n: abrir un submenÃƒÂº cierra
+        // el otro. Al arrastrar el mapa, se abre solo en el submenÃƒÂº "Mapa".
         Column(modifier = Modifier.align(Alignment.TopEnd).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.End) {
             IconButton(onClick = onNavigateToSettings, modifier = Modifier.background(Color.White.copy(alpha = 0.8f), CircleShape)) { Icon(Icons.Default.Settings, "Ajustes", tint = Color.Black) }
             OptionsMenu(
@@ -1952,16 +1971,16 @@ fun WorldMapScreen(
                             id = "opciones", label = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_fab_options), icon = Icons.Default.Tune,
                             items = buildList {
                                 add(OptionMenuItem(androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_opt_change_skin), Icons.Default.Person, Color(0xFFD91B5B)) { viewModel.toggleSkinSelector(true) })
-                                // MODO HISTORIA: guardado manual → abre el selector de slots.
+                                // MODO HISTORIA: guardado manual Ã¢â€ â€™ abre el selector de slots.
                                 add(OptionMenuItem("Guardar partida", Icons.Default.School, Color(0xFF4CAF50)) {
                                     onRequestSaveGame()
                                 })
                                 // Teletransportarse: solo en Modo Desarrollador.
                                 if (developerMode) add(OptionMenuItem(androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_opt_teleport), Icons.Default.LocationOn, Color(0xFFFF9800)) { viewModel.toggleTeleportMenu(true) })
-                                // (Submenú "Ir a…" eliminado: "Ir a ESCOM" ya es el primer punto de
-                                // "Teletransportarse…" y "Ir a tu Ubicación (GPS)" se movió al inicio
+                                // (SubmenÃƒÂº "Ir aÃ¢â‚¬Â¦" eliminado: "Ir a ESCOM" ya es el primer punto de
+                                // "TeletransportarseÃ¢â‚¬Â¦" y "Ir a tu UbicaciÃƒÂ³n (GPS)" se moviÃƒÂ³ al inicio
                                 // de esa misma lista.)
-                                // Submenú anidado "Diseñador / Debug": solo en Modo Desarrollador.
+                                // SubmenÃƒÂº anidado "DiseÃƒÂ±ador / Debug": solo en Modo Desarrollador.
                                 if (developerMode) add(
                                     OptionMenuGroup(
                                         id = "disenador_debug",
@@ -1996,14 +2015,14 @@ fun WorldMapScreen(
                         OptionMenuGroup(
                             id = "mapa", label = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_chip_map), icon = Icons.Default.LocationOn,
                             items = buildList {
-                                // (Submenú "Zoom (acercar / alejar)" eliminado: el zoom se hace
+                                // (SubmenÃƒÂº "Zoom (acercar / alejar)" eliminado: el zoom se hace
                                 // con pinch de dos dedos en los tres renderers.)
                                 // Centrar en jugador: SIEMPRE disponible (antes solo al panear),
                                 // para volver al jugador en cualquier momento. Si el usuario ha
-                                // cambiado el zoom respecto al de juego, esta opción EVOLUCIONA a
-                                // un submenú con androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_opt_center_player) y androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_opt_zoom_player).
+                                // cambiado el zoom respecto al de juego, esta opciÃƒÂ³n EVOLUCIONA a
+                                // un submenÃƒÂº con androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_opt_center_player) y androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_opt_zoom_player).
                                 run {
-                                    // Default actual por estado: 22 a pie, 21 conduciendo (20 rápido).
+                                    // Default actual por estado: 22 a pie, 21 conduciendo (20 rÃƒÂ¡pido).
                                     val defaultZoom = if (uiState.isDriving)
                                         ovh.gabrielhuav.pow.features.map_exterior.viewmodel.ZOOM_DRIVING
                                     else
@@ -2025,7 +2044,7 @@ fun WorldMapScreen(
                                     }
                                 }
                                 if (uiState.isTargetingWaypoint) {
-                                    // Apuntando: confirmar o cancelar TAMBIÉN desde el menú (no
+                                    // Apuntando: confirmar o cancelar TAMBIÃƒâ€°N desde el menÃƒÂº (no
                                     // botones flotantes que tapen los controles).
                                     add(OptionMenuItem(androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_set_destination), Icons.Default.LocationOn, Color(0xFF4CAF50)) {
                                         if (uiState.mapProvider == MapProvider.OSM) {
@@ -2051,8 +2070,8 @@ fun WorldMapScreen(
             )
         }
 
-        // Cuando se está apuntando un waypoint, solo se muestra la cruz central; el
-        // confirmar/cancelar vive en el menú anidado (Mapa) para no tapar los controles.
+        // Cuando se estÃƒÂ¡ apuntando un waypoint, solo se muestra la cruz central; el
+        // confirmar/cancelar vive en el menÃƒÂº anidado (Mapa) para no tapar los controles.
         if (uiState.isTargetingWaypoint) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -2062,7 +2081,7 @@ fun WorldMapScreen(
             }
         }
 
-        // ─── AVISO DE CAMBIO DE PROVEEDOR (precarga en segundo plano) ─────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ AVISO DE CAMBIO DE PROVEEDOR (precarga en segundo plano) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         val pending = uiState.pendingProvider
         if (pending != null) {
             Box(
@@ -2104,14 +2123,14 @@ fun WorldMapScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.wm_tp_subtitle), fontSize = 14.sp)
                         LazyColumn(modifier = Modifier.fillMaxHeight(0.5f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Primera opción: tu ubicación REAL (GPS del dispositivo, p. ej. volver a
-                            // casa). Movida aquí desde el antiguo submenú "Ir a…".
+                            // Primera opciÃƒÂ³n: tu ubicaciÃƒÂ³n REAL (GPS del dispositivo, p. ej. volver a
+                            // casa). Movida aquÃƒÂ­ desde el antiguo submenÃƒÂº "Ir aÃ¢â‚¬Â¦".
                             item {
                                 Button(onClick = {
                                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                                         try {
-                                            // Lectura FRESCA de alta precisión (lastLocation es caché y
-                                            // podía mandarte a una ubicación vieja/imprecisa).
+                                            // Lectura FRESCA de alta precisiÃƒÂ³n (lastLocation es cachÃƒÂ© y
+                                            // podÃƒÂ­a mandarte a una ubicaciÃƒÂ³n vieja/imprecisa).
                                             val fused = LocationServices.getFusedLocationProviderClient(context)
                                             fused.getCurrentLocation(
                                                 com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null
@@ -2202,10 +2221,10 @@ fun WorldMapScreen(
             )
         }
 
-        // ─── PANEL DEL EDITOR DE LÍNEAS (Debug Interiores) ───────────────────────
-        // Visible cuando el overlay de Debug Interiores está activo. Barra horizontal
+        // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PANEL DEL EDITOR DE LÃƒÂNEAS (Debug Interiores) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        // Visible cuando el overlay de Debug Interiores estÃƒÂ¡ activo. Barra horizontal
         // abajo (los controles de movimiento se ocultan al editar). Se DIBUJA con el dedo
-        // sobre el mapa: arrastre = línea (bardas/caminos) o rectángulo (zonas rojas).
+        // sobre el mapa: arrastre = lÃƒÂ­nea (bardas/caminos) o rectÃƒÂ¡ngulo (zonas rojas).
         if (uiState.showInteriorDebugOverlay) {
             ovh.gabrielhuav.pow.features.map_exterior.ui.components.InteriorDebugEditorPanel(
                 tool = uiState.debugEditTool,
@@ -2231,8 +2250,8 @@ fun WorldMapScreen(
             )
         }
 
-        // (El widget de OBJETIVO se dibuja UNA sola vez, arriba-centro — ver más arriba.
-        // Antes había aquí un segundo widget arriba-izquierda que duplicaba el objetivo.)
+        // (El widget de OBJETIVO se dibuja UNA sola vez, arriba-centro Ã¢â‚¬â€ ver mÃƒÂ¡s arriba.
+        // Antes habÃƒÂ­a aquÃƒÂ­ un segundo widget arriba-izquierda que duplicaba el objetivo.)
 
         val configuration = LocalConfiguration.current
         val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
@@ -2244,10 +2263,10 @@ fun WorldMapScreen(
         val sidePadding = if (isPortrait) 8.dp else 32.dp
         val bottomPadding = if (isPortrait) 32.dp else 20.dp
 
-        // En HORIZONTAL, al abrir el menú de Opciones, este (arriba a la derecha) se
+        // En HORIZONTAL, al abrir el menÃƒÂº de Opciones, este (arriba a la derecha) se
         // extiende hacia abajo y choca con el control de la derecha (D-pad/diamante).
-        // Desplazamos ese control hacia la izquierda mientras el menú está abierto para
-        // que el usuario pueda usar el menú (con su scroll) sin que tape los botones.
+        // Desplazamos ese control hacia la izquierda mientras el menÃƒÂº estÃƒÂ¡ abierto para
+        // que el usuario pueda usar el menÃƒÂº (con su scroll) sin que tape los botones.
         val isMenuOpenLandscape = optionsExpanded && !isPortrait
         val rightCtrlShift by animateDpAsState(
             targetValue = if (isMenuOpenLandscape) (-150).dp else 0.dp,
@@ -2265,13 +2284,13 @@ fun WorldMapScreen(
             }
         }
 
-        if (!uiState.isDesignerMode && !uiState.showInteriorDebugOverlay) { // Oculta joystick y botones en modo diseñador y al editar el Debug Interiores
+        if (!uiState.isDesignerMode && !uiState.showInteriorDebugOverlay) { // Oculta joystick y botones en modo diseÃƒÂ±ador y al editar el Debug Interiores
             Row(modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(bottom = bottomPadding, start = sidePadding, end = sidePadding).systemBarsPadding(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (uiState.isDriving) {
-                // D-pad de conducción: SOLO gira (IZQ/DER). Arriba/abajo quedan inertes
-                // a propósito — gas y freno viven únicamente en el diamante PS4.
+                // D-pad de conducciÃƒÂ³n: SOLO gira (IZQ/DER). Arriba/abajo quedan inertes
+                // a propÃƒÂ³sito Ã¢â‚¬â€ gas y freno viven ÃƒÂºnicamente en el diamante PS4.
                 val drivingDpad = @Composable { m: Modifier ->
-                    // Respeta la preferencia de control: JOYSTICK = joystick de dirección (izq/der);
+                    // Respeta la preferencia de control: JOYSTICK = joystick de direcciÃƒÂ³n (izq/der);
                     // D-pad = flechitas. Gas/freno siempre en el diamante PS4 (drivingActions).
                     if (uiState.controlType == ControlType.JOYSTICK)
                         VehicleJoystickController(
@@ -2282,13 +2301,13 @@ fun WorldMapScreen(
                     else
                         VehicleDPadController(
                             modifier = m.scale(effectiveScale),
-                            onUp = { /* sin uso en conducción */ },
-                            onDown = { /* sin uso en conducción */ },
+                            onUp = { /* sin uso en conducciÃƒÂ³n */ },
+                            onDown = { /* sin uso en conducciÃƒÂ³n */ },
                             onLeft = { viewModel.steerLeft(it) },
                             onRight = { viewModel.steerRight(it) }
                         )
                 }
-                // Diamante estilo PS4: △ SALIR · ✕ gas · ○ freno · □ freno de mano.
+                // Diamante estilo PS4: Ã¢â€“Â³ SALIR Ã‚Â· Ã¢Å“â€¢ gas Ã‚Â· Ã¢â€”â€¹ freno Ã‚Â· Ã¢â€“Â¡ freno de mano.
                 val drivingActions = @Composable { m: Modifier ->
                     Ps4ActionButtonsController(
                         modifier = m.scale(effectiveScale),
@@ -2316,7 +2335,12 @@ fun WorldMapScreen(
                             modifier = m.scale(effectiveScale),
                             onActionChanged = { action, isPressed ->
                                 if (action == GameAction.X && isPressed) {
-                                    viewModel.handleInteraction()
+                                    val nearbySuburbanoNow = uiState.nearbySuburbanoStation
+if (nearbySuburbanoNow != null) {
+    onNavigateToInterior("suburbano_station_interior/${nearbySuburbanoNow.name}")
+} else {
+    viewModel.handleInteraction()
+}
                                 }
                                 if (action == GameAction.Y) {
                                     if (isPressed) {
@@ -2393,7 +2417,7 @@ fun WorldMapScreen(
         CollectibleClaimDialog(collectible = collectible, onDismiss = { viewModel.dismissClaimedPopup() })
     }
 
-    // ─── ESCOM Door Fade Overlay ─────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ESCOM Door Fade Overlay Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     val escomFadeAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
     LaunchedEffect(uiState.showEscomDoorFade) {
         if (uiState.showEscomDoorFade) {
@@ -2412,7 +2436,7 @@ fun WorldMapScreen(
         )
     }
 
-    // ─── Metro Door Fade Overlay ─────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Metro Door Fade Overlay Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     val metroFadeAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
     LaunchedEffect(uiState.showMetroFade) {
         if (uiState.showMetroFade) {
@@ -2438,7 +2462,7 @@ fun WorldMapScreen(
         }
     }
 
-    // ─── Metrobús Fade Overlay ───────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MetrobÃƒÂºs Fade Overlay Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     val metrobusFadeAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
     LaunchedEffect(uiState.showMetrobusFade) {
         if (uiState.showMetrobusFade) {
