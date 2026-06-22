@@ -2337,7 +2337,7 @@ fun WorldMapScreen(
                                 if (action == GameAction.X && isPressed) {
                                     val nearbySuburbanoNow = uiState.nearbySuburbanoStation
 if (nearbySuburbanoNow != null) {
-    onNavigateToInterior("suburbano_station_interior/${nearbySuburbanoNow.name}")
+    onNavigateToInterior("suburbano_station_interior/${android.net.Uri.encode(nearbySuburbanoNow.name)}")
 } else {
     viewModel.handleInteraction()
 }
