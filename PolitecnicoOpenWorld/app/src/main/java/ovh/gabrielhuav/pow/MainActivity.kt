@@ -945,7 +945,7 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack("world_map", inclusive = false)
                                 },
                                 onTeleportToStation = { newStation, x, y ->
-                                    navController.navigate("suburbano_station_interior/=&spawnY=") {
+                                    navController.navigate("suburbano_station_interior/$newStation?spawnX=$x&spawnY=$y") {
                                         popUpTo("world_map") { inclusive = false }
                                     }
                                 }

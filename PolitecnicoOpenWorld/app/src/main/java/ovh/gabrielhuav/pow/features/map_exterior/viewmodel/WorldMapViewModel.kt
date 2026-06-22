@@ -1994,7 +1994,33 @@ class WorldMapViewModel(
 
     private fun checkCollectibleProximity(playerLat: Double, playerLon: Double) {
         val playerGeo = org.osmdroid.util.GeoPoint(playerLat, playerLon)
-        val INTERACT_RADIUS_METERS = 15.0
+        val INTERACT_RADIUS_METERS = 25.0
+        val SUBURBANO_INTERACT_RADIUS_METERS = 200.0
+
+        // 0. Prioridad a estaciones del Suburbano
+        val suburbanoStations = _uiState.value.suburbanoStations
+        val nearbySuburbano = suburbanoStations.minByOrNull { playerGeo.distanceToAsDouble(it.location) }
+
+        if (nearbySuburbano != null && playerGeo.distanceToAsDouble(nearbySuburbano.location) <= SUBURBANO_INTERACT_RADIUS_METERS) {
+            if (_uiState.value.nearbySuburbanoStation?.name != nearbySuburbano.name) {
+                _uiState.update {
+                    it.copy(
+                        nearbySuburbanoStation = nearbySuburbano,
+                        nearbyMetroStation = null,
+                        nearbyMetrobusStation = null,
+                        nearbyCollectible = null
+                    )
+                }
+                promptJob?.cancel()
+                val promptText = "PRESIONA X PARA ENTRAR A ESTACIÓN SUBURBANO ${nearbySuburbano.name.uppercase()}"
+                _uiState.update { it.copy(interactionPrompt = promptText) }
+            }
+            return
+        }
+
+        if (_uiState.value.nearbySuburbanoStation != null) {
+            _uiState.update { it.copy(nearbySuburbanoStation = null) }
+        }
 
         // 1. Verificar cercanía a estaciones del metro
         val metroStations = _uiState.value.metroStations
@@ -2735,6 +2761,20 @@ class WorldMapViewModel(
      * navegue a la ruta "interiores_zombies" (modo Interiores → capa zombis).
      */
     fun handleInteraction() {
+        // Prioridad de entrada al Suburbano
+        val nearbySuburbano = _uiState.value.nearbySuburbanoStation
+        if (nearbySuburbano != null) {
+            _uiState.update {
+                it.copy(
+                    showSuburbanoFade = false,
+                    suburbanoFadeCompleteStation = nearbySuburbano,
+                    nearbySuburbanoStation = null,
+                    interactionPrompt = null
+                )
+            }
+            return
+        }
+
         val nearbyMetro = _uiState.value.nearbyMetroStation
         if (nearbyMetro != null) {
             _uiState.update { it.copy(showMetroFade = true) }

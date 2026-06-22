@@ -1,9 +1,19 @@
 package ovh.gabrielhuav.pow.features.interiores.escom.ui
 
+import android.net.Uri
+import android.media.MediaPlayer
+import android.view.Surface
+import android.view.TextureView
+import android.graphics.SurfaceTexture
+import android.graphics.Matrix
+import androidx.compose.ui.viewinterop.AndroidView
+import java.io.File
+
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -11,22 +21,24 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.PanTool
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.PanTool
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -34,17 +46,17 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ovh.gabrielhuav.pow.domain.models.zombie.ZoneDoor
 import ovh.gabrielhuav.pow.features.interiores.escom.viewmodel.SuburbanoInteriorState
 import ovh.gabrielhuav.pow.features.interiores.escom.viewmodel.SuburbanoInteriorViewModel
 import kotlin.math.min
-
-private val MB_RED = Color(0xFFC21D24)
-private val MB_RED_DARK = Color(0xFF8A0A0E)
+import kotlin.math.roundToInt
 
 @Composable
 fun SuburbanoMapOverlay(
@@ -59,43 +71,47 @@ fun SuburbanoMapOverlay(
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
+    // Cargar mapa
     LaunchedEffect(Unit) {
         mapBitmap = withContext(Dispatchers.IO) {
             try {
                 context.assets.open("suburbano_cdmx/map.png").use {
                     BitmapFactory.decodeStream(it)?.asImageBitmap()
                 }
-            } catch (e: Exception) { null }
+            } catch (e: Exception) {
+                null
+            }
         }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1A0505))
+            .background(Color.Black)
     ) {
-        // Fondo degradado rojo oscuro (sin video para Metrobús)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(Color(0xFF2D0808), Color(0xFF0D0202))
-                    )
-                )
+        // Reproductor de video inmersivo de fondo
+        SuburbanoLoopingVideoPlayer(
+            assetFileName = "suburbano_cdmx/video.mp4",
+            modifier = Modifier.fillMaxSize()
         )
 
         if (mapBitmap != null) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.80f)
-                    .fillMaxHeight(0.72f)
+                    .fillMaxWidth(0.75f)
+                    .fillMaxHeight(0.7f)
                     .align(Alignment.Center)
                     .clip(RoundedCornerShape(16.dp))
                     .pointerInput(state.mapDesignerMode, state.mapDesignerMoveMode) {
                         detectTransformGestures { _, pan, zoom, _ ->
                             scale = (scale * zoom).coerceIn(1f, 5f)
                             if (state.mapDesignerMode && state.mapDesignerMoveMode && state.selectedGlobalWaypointIndex != -1) {
+                                // Mover waypoint (ajustamos el pan según la escala y tamaño del contenedor original de 1920x1080 o el tamaño relativo)
+                                // En este caso, el tamaño del contenedor no está directamente en pointerInput(Unit) sin BoxWithConstraints.
+                                // Podemos pasar un delta estimado o calcular el tamaño real usando un layout modifier.
+                                // Ya que `size` no está disponible directamente aquí (es un PointerInputScope sin MeasureScope), 
+                                // es mejor usar el pan asumiendo un tamaño de contenedor estándar o guardando el tamaño de pantalla.
+                                // Una forma simple es (pan.x / 1000f) pero lo haremos mejor:
                                 val nxDelta = pan.x / (size.width * scale)
                                 val nyDelta = pan.y / (size.height * scale)
                                 viewModel.moveSelectedGlobalWaypointBy(nxDelta, nyDelta)
@@ -109,18 +125,21 @@ fun SuburbanoMapOverlay(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer(
-                            scaleX = scale, scaleY = scale,
-                            translationX = offset.x, translationY = offset.y
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
                         )
                 ) {
                     val imgWidth = mapBitmap!!.width.toFloat()
                     val imgHeight = mapBitmap!!.height.toFloat()
                     val imgRatio = imgWidth / imgHeight
                     val viewRatio = maxWidth.value / maxHeight.value
-
+                    
                     val drawWidthDp = if (imgRatio > viewRatio) maxWidth else maxHeight * imgRatio
                     val drawHeightDp = if (imgRatio > viewRatio) maxWidth / imgRatio else maxHeight
 
+                    // Contenedor que abraza EXACTAMENTE a la imagen
                     Box(
                         modifier = Modifier
                             .size(drawWidthDp, drawHeightDp)
@@ -128,7 +147,7 @@ fun SuburbanoMapOverlay(
                     ) {
                         Image(
                             bitmap = mapBitmap!!,
-                            contentDescription = "Mapa del Metrobús",
+                            contentDescription = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.cd_suburbano_map),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = androidx.compose.ui.layout.ContentScale.FillBounds
                         )
@@ -140,18 +159,16 @@ fun SuburbanoMapOverlay(
                                     if (state.mapDesignerMode) {
                                         detectDragGestures(
                                             onDragStart = { startOffset ->
-                                                viewModel.selectGlobalWaypointAt(
-                                                    startOffset.x / size.width,
-                                                    startOffset.y / size.height
-                                                )
+                                                val nx = startOffset.x / size.width
+                                                val ny = startOffset.y / size.height
+                                                viewModel.selectGlobalWaypointAt(nx, ny)
                                             },
                                             onDrag = { change, _ ->
                                                 if (state.selectedGlobalWaypointIndex != -1) {
                                                     change.consume()
-                                                    viewModel.moveSelectedGlobalWaypointTo(
-                                                        change.position.x / size.width,
-                                                        change.position.y / size.height
-                                                    )
+                                                    val nx = change.position.x / size.width
+                                                    val ny = change.position.y / size.height
+                                                    viewModel.moveSelectedGlobalWaypointTo(nx, ny)
                                                 }
                                             }
                                         )
@@ -165,6 +182,7 @@ fun SuburbanoMapOverlay(
                                             if (state.mapDesignerMode) {
                                                 viewModel.selectGlobalWaypointAt(nx, ny)
                                             } else {
+                                                // Teletransportar si tap en un waypoint
                                                 val hitDoor = state.globalWaypoints.firstOrNull {
                                                     nx in it.hitboxFrac.left..it.hitboxFrac.right &&
                                                     ny in it.hitboxFrac.top..it.hitboxFrac.bottom
@@ -184,15 +202,11 @@ fun SuburbanoMapOverlay(
                                 val top = r.top * size.height
                                 val width = (r.right - r.left) * size.width
                                 val height = (r.bottom - r.top) * size.height
+
                                 val radius = min(width, height) / 4f
                                 drawCircle(
-                                    color = if (isSelected) Color.Yellow.copy(alpha = 0.9f) else Color(0xFFFF6B6B).copy(alpha = 0.85f),
+                                    color = if (isSelected) Color.Yellow.copy(alpha = 0.8f) else Color.Cyan.copy(alpha = 0.8f),
                                     radius = radius,
-                                    center = Offset(left + width / 2f, top + height / 2f)
-                                )
-                                drawCircle(
-                                    color = Color.White.copy(alpha = 0.6f),
-                                    radius = radius * 0.5f,
                                     center = Offset(left + width / 2f, top + height / 2f)
                                 )
                             }
@@ -201,39 +215,10 @@ fun SuburbanoMapOverlay(
                 }
             }
         } else {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = MB_RED
-            )
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.White)
         }
 
-        // Encabezado del Metrobús
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 16.dp)
-                .systemBarsPadding()
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .background(MB_RED, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "SISTEMA METROBÚS · SELECCIONA TU DESTINO",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        }
-
-        // Controles superiores derechos
+        // Toolbar normal (Cerrar mapa)
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -243,18 +228,16 @@ fun SuburbanoMapOverlay(
         ) {
             Button(
                 onClick = { viewModel.toggleMapDesignerMode() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (state.mapDesignerMode) MB_RED else Color.DarkGray
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = if (state.mapDesignerMode) Color(0xFFF07B00) else Color.DarkGray)
             ) {
-                Text(if (state.mapDesignerMode) "Modo Diseñador" else "Editar Mapa", color = Color.White)
+                Text(if (state.mapDesignerMode) androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.int_designer_mode) else androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.int_edit_map), color = Color.White)
             }
-
+            
             IconButton(
                 onClick = { viewModel.closeSuburbanoMap() },
-                modifier = Modifier.background(MB_RED_DARK, RoundedCornerShape(8.dp))
+                modifier = Modifier.background(Color.Red, RoundedCornerShape(8.dp))
             ) {
-                Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
+                Icon(Icons.Default.Close, contentDescription = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.common_close), tint = Color.White)
             }
         }
 
@@ -267,7 +250,7 @@ fun SuburbanoMapOverlay(
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)
                     .systemBarsPadding()
-                    .background(Color(0xBB000000), RoundedCornerShape(12.dp))
+                    .background(Color(0xAA000000), RoundedCornerShape(12.dp))
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -278,44 +261,43 @@ fun SuburbanoMapOverlay(
                 ) {
                     IconButton(
                         onClick = { viewModel.toggleMapDesignerMoveMode() },
-                        modifier = Modifier.background(
-                            if (state.mapDesignerMoveMode) MB_RED else Color.DarkGray, CircleShape
-                        )
+                        modifier = Modifier.background(if (state.mapDesignerMoveMode) Color.Red else Color.DarkGray, CircleShape)
                     ) {
                         Icon(
                             imageVector = if (state.mapDesignerMoveMode) Icons.Default.PanTool else Icons.Default.TouchApp,
-                            contentDescription = if (state.mapDesignerMoveMode) "Bloquear Mapa" else "Mover Mapa",
+                            contentDescription = if (state.mapDesignerMoveMode) androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.int_lock_map) else androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.int_move_map),
                             tint = Color.White
                         )
                     }
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Añadir Estación", tint = Color.Green)
+                        Icon(Icons.Default.Add, contentDescription = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.cd_add_station), tint = Color.Green)
                     }
                     IconButton(onClick = { viewModel.deleteSelectedGlobalWaypoint() }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
+                        Icon(Icons.Default.Delete, contentDescription = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.cd_delete), tint = Color.Red)
                     }
                     IconButton(onClick = onImportGlobal) {
-                        Icon(Icons.Default.Upload, contentDescription = "Importar", tint = Color.Cyan)
+                        Icon(Icons.Default.Upload, contentDescription = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.cd_import), tint = Color.Cyan)
                     }
                     IconButton(onClick = onExportGlobal) {
-                        Icon(Icons.Default.Download, contentDescription = "Exportar", tint = Color.Cyan)
+                        Icon(Icons.Default.Download, contentDescription = androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.cd_export), tint = Color.Cyan)
                     }
                 }
+                
                 Button(
                     onClick = { viewModel.saveGlobalWaypoints() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MB_RED)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Guardar Waypoints")
+                    Text(androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.common_save))
                 }
             }
 
             if (showAddDialog) {
-                AddSuburbanoStationDialog(
+                AddStationDialog(
                     state = state,
                     onDismiss = { showAddDialog = false },
-                    onStationSelected = { stName ->
-                        viewModel.addGlobalWaypoint(0.5f, 0.5f, stName)
+                    onStationSelected = { stationName ->
+                        // Añadir waypoint al centro de la vista (aprox 0.5f, 0.5f)
+                        viewModel.addGlobalWaypoint(0.5f, 0.5f, stationName)
                         showAddDialog = false
                     },
                     onSearch = { viewModel.updateMapSearchQuery(it) }
@@ -326,7 +308,7 @@ fun SuburbanoMapOverlay(
 }
 
 @Composable
-private fun AddSuburbanoStationDialog(
+fun AddStationDialog(
     state: SuburbanoInteriorState,
     onDismiss: () -> Unit,
     onStationSelected: (String) -> Unit,
@@ -335,62 +317,145 @@ private fun AddSuburbanoStationDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF1E0B0B),
+            color = Color(0xFF1E1E24),
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.8f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    "Seleccionar Estación de Metrobús",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.suburbano_select_station), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(12.dp))
-
+                
                 OutlinedTextField(
                     value = state.mapSearchQuery,
                     onValueChange = onSearch,
-                    label = { Text("Buscar estación", color = Color.Gray) },
+                    label = { Text(androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.common_search), color = Color.Gray) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFFC21D24),
-                        cursorColor = Color(0xFFC21D24)
+                        focusedBorderColor = Color(0xFFF07B00),
+                        cursorColor = Color(0xFFF07B00)
                     )
                 )
-
+                
                 Spacer(modifier = Modifier.height(12.dp))
-
-                val filtered = state.allSuburbanoStations.filter {
-                    it.name.contains(state.mapSearchQuery, ignoreCase = true)
+                
+                val filtered = state.allSuburbanoStations.filter { 
+                    it.name.contains(state.mapSearchQuery, ignoreCase = true) 
                 }
-
+                
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(filtered) { station ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onStationSelected(station.name) }
-                                .padding(vertical = 10.dp, horizontal = 8.dp)
+                                .padding(vertical = 12.dp, horizontal = 8.dp)
                         ) {
-                            Text(station.name, color = Color.White, fontSize = 15.sp)
+                            Text(station.name, color = Color.White, fontSize = 16.sp)
                         }
-                        HorizontalDivider(color = Color(0xFF4A1C1C))
+                        HorizontalDivider(color = Color.DarkGray)
                     }
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
+                
+                Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.align(Alignment.End),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC21D24))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Cancelar")
+                    Text(androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.menu_cancel))
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SuburbanoLoopingVideoPlayer(assetFileName: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    
+    // Copy the asset file to cache if it doesn't exist
+    val cacheFile = remember(assetFileName) {
+        val file = File(context.cacheDir, assetFileName.replace("/", "_"))
+        if (!file.exists()) {
+            try {
+                context.assets.open(assetFileName).use { inputStream ->
+                    file.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        file
+    }
+
+    if (cacheFile.exists()) {
+        AndroidView(
+            factory = { ctx ->
+                TextureView(ctx).apply {
+                    // Store view and video dims separately; apply matrix when both are known
+                    var viewW = 0
+                    var viewH = 0
+                    var vidW = 0
+                    var vidH = 0
+
+                    fun applyFitHeightMatrix() {
+                        if (viewW <= 0 || viewH <= 0 || vidW <= 0 || vidH <= 0) return
+                        // TextureView stretches video to viewW x viewH by default.
+                        // Correction: scaleX = (vidW/vidH * viewH) / viewW  →  keeps height full, width proportional.
+                        val scaleX = (vidW.toFloat() * viewH) / (vidH.toFloat() * viewW)
+                        val matrix = Matrix()
+                        matrix.setScale(scaleX, 1f, viewW / 2f, viewH / 2f)
+                        setTransform(matrix)
+                    }
+
+                    surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+                        var mediaPlayer: MediaPlayer? = null
+
+                        override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+                            viewW = width
+                            viewH = height
+                            mediaPlayer = MediaPlayer().apply {
+                                setDataSource(ctx, Uri.fromFile(cacheFile))
+                                setSurface(Surface(surface))
+                                isLooping = true
+                                setVolume(0f, 0f)
+                                setOnVideoSizeChangedListener { _, vWidth, vHeight ->
+                                    vidW = vWidth
+                                    vidH = vHeight
+                                    applyFitHeightMatrix()
+                                }
+                                setOnPreparedListener { mp ->
+                                    // Also grab dims from prepared in case size event already fired
+                                    if (vidW == 0) { vidW = mp.videoWidth; vidH = mp.videoHeight }
+                                    applyFitHeightMatrix()
+                                    mp.start()
+                                }
+                                prepareAsync()
+                            }
+                        }
+
+                        override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+                            viewW = width
+                            viewH = height
+                            applyFitHeightMatrix()
+                        }
+
+                        override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
+                            mediaPlayer?.release()
+                            mediaPlayer = null
+                            return true
+                        }
+
+                        override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
+                    }
+                }
+            },
+            modifier = modifier
+        )
     }
 }

@@ -316,4 +316,7 @@
     <string name="settings_dpad">Cruz de Botones</string>
     <string name="settings_joystick">Joystick Virtual</string>
 
+    <string name="cd_suburbano_map">Mapa del Suburbano</string>
+    <string name="suburbano_select_station">Selecciona una estación del Suburbano</string>
+    <string name="cd_suburbano_player">Cd suburbano player</string>
 </resources>

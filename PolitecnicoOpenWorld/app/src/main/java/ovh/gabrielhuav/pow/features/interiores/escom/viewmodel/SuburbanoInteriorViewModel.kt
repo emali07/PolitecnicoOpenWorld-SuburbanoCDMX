@@ -2,13 +2,9 @@ package ovh.gabrielhuav.pow.features.interiores.escom.viewmodel
 
 import android.app.Application
 import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.io.InputStreamReader
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,9 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ovh.gabrielhuav.pow.data.repository.SuburbanoRepository
 import ovh.gabrielhuav.pow.data.repository.SettingsRepository
 import ovh.gabrielhuav.pow.domain.models.zombie.DoorKind
+import android.net.Uri
 import ovh.gabrielhuav.pow.domain.models.zombie.NormRect
 import ovh.gabrielhuav.pow.domain.models.zombie.ZoneDoor
 import ovh.gabrielhuav.pow.features.map_exterior.ui.components.PlayerAction
@@ -27,6 +23,10 @@ import ovh.gabrielhuav.pow.features.interiores.core.viewmodel.DesignerTarget
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.io.InputStreamReader
+import ovh.gabrielhuav.pow.data.repository.SuburbanoRepository
 
 class SuburbanoInteriorViewModel(
     private val context: Context,
@@ -47,10 +47,12 @@ class SuburbanoInteriorViewModel(
 
     private var idleJob: Job? = null
     private var collisionGrid: CollisionGrid = CollisionGrid.emptyWithBorder()
-
+    
+    // Configuración del tamaño de la matriz
     private var gridRows = 30
     private var gridCols = 20
 
+    // Constantes de pasos de movimiento (coordenadas [0,1])
     private val WALK_STEP = 0.004f
     private val RUN_STEP = 0.008f
 
@@ -62,10 +64,11 @@ class SuburbanoInteriorViewModel(
         val savedDoors = prefs.getString("doors", null)
 
         var initialRows = if (savedRows != null) {
-            try { gson.fromJson<List<String>>(savedRows, object : TypeToken<List<String>>() {}.type) }
-            catch (e: Exception) { null }
+            try {
+                gson.fromJson<List<String>>(savedRows, object : TypeToken<List<String>>() {}.type)
+            } catch (e: Exception) { null }
         } else null
-
+        
         if (initialRows.isNullOrEmpty()) {
             try {
                 context.assets.open("suburbano_cdmx/matrix.json").use { inp ->
@@ -80,14 +83,16 @@ class SuburbanoInteriorViewModel(
             else "#" + ".".repeat(gridCols - 2) + "#"
         }
 
+        // Sincronizar gridRows/gridCols con la matriz cargada
         gridRows = defaultRows.size
         gridCols = defaultRows.maxOfOrNull { it.length } ?: gridCols
-
+        
         var initialDoors = if (savedDoors != null) {
-            try { gson.fromJson<List<ZoneDoor>>(savedDoors, object : TypeToken<List<ZoneDoor>>() {}.type) }
-            catch (e: Exception) { null }
+            try {
+                gson.fromJson<List<ZoneDoor>>(savedDoors, object : TypeToken<List<ZoneDoor>>() {}.type)
+            } catch (e: Exception) { null }
         } else null
-
+        
         if (initialDoors.isNullOrEmpty()) {
             try {
                 context.assets.open("suburbano_cdmx/waypoints.json").use { inp ->
@@ -98,21 +103,22 @@ class SuburbanoInteriorViewModel(
         }
 
         val defaultDoors = initialDoors ?: listOf(
-            ZoneDoor(NormRect(0.15f, 0.35f, 0.35f, 0.50f), "taquilla", "Taquilla", DoorKind.GENERIC),
-            ZoneDoor(NormRect(0.42f, 0.52f, 0.62f, 0.64f), "torniquetes", "Torniquetes", DoorKind.GENERIC),
-            ZoneDoor(NormRect(0.08f, 0.08f, 0.92f, 0.28f), "anden", "Andén", DoorKind.GENERIC)
+            ZoneDoor(NormRect(0.20f, 0.40f, 0.35f, 0.55f), "taquilla", "Taquilla", DoorKind.GENERIC),
+            ZoneDoor(NormRect(0.45f, 0.60f, 0.60f, 0.70f), "torniquetes", "Torniquetes", DoorKind.GENERIC),
+            ZoneDoor(NormRect(0.10f, 0.10f, 0.90f, 0.30f), "anden", "Andén", DoorKind.GENERIC)
         )
-
+        
+        // Cargar mapa global
         val globalPrefs = context.getSharedPreferences("suburbano_map_global", Context.MODE_PRIVATE)
         val savedGlobalWaypoints = globalPrefs.getString("global_waypoints", null)
-
+        
         var initialGlobalWaypoints: List<ZoneDoor>? = null
         if (savedGlobalWaypoints != null) {
             try {
                 initialGlobalWaypoints = gson.fromJson<List<ZoneDoor>>(savedGlobalWaypoints, object : TypeToken<List<ZoneDoor>>() {}.type)
             } catch (e: Exception) { }
         }
-
+        
         if (initialGlobalWaypoints.isNullOrEmpty()) {
             try {
                 context.assets.open("suburbano_cdmx/global_waypoints.json").use { inp ->
@@ -125,7 +131,7 @@ class SuburbanoInteriorViewModel(
         val allStations = SuburbanoRepository.loadStations(context)
 
         var startX = 0.5f
-        var startY = 0.75f
+        var startY = 0.15f
         var recharged = false
 
         if (spawnX != -1f && spawnY != -1f) {
@@ -134,9 +140,9 @@ class SuburbanoInteriorViewModel(
             recharged = true
         }
 
-        _state.update {
+        _state.update { 
             it.copy(
-                designerRows = defaultRows,
+                designerRows = defaultRows, 
                 doors = defaultDoors,
                 globalWaypoints = initialGlobalWaypoints ?: emptyList(),
                 allSuburbanoStations = allStations,
@@ -145,7 +151,7 @@ class SuburbanoInteriorViewModel(
                 hasRechargedTicket = recharged,
                 spawnWithAnimation = recharged,
                 isPlayerVisible = !recharged
-            )
+            ) 
         }
         updateCollisionGrid(defaultRows)
     }
@@ -154,8 +160,10 @@ class SuburbanoInteriorViewModel(
         if (_state.value.designerMode || !_state.value.areControlsEnabled) return
         val current = _state.value
         val step = if (current.isRunning) RUN_STEP else WALK_STEP
+
         val dx = cos(angleRad).toFloat() * step
         val dy = -sin(angleRad).toFloat() * step
+
         applyMovement(current.playerX + dx, current.playerY + dy, dx)
     }
 
@@ -163,12 +171,14 @@ class SuburbanoInteriorViewModel(
         if (_state.value.designerMode || !_state.value.areControlsEnabled) return
         val current = _state.value
         val step = if (current.isRunning) RUN_STEP else WALK_STEP
+
         val (dx, dy) = when (direction) {
             Direction.UP    -> 0f to -step
             Direction.DOWN  -> 0f to  step
             Direction.LEFT  -> -step to 0f
             Direction.RIGHT ->  step to 0f
         }
+
         applyMovement(current.playerX + dx, current.playerY + dy, dx)
     }
 
@@ -180,8 +190,8 @@ class SuburbanoInteriorViewModel(
 
         val (fx, fy) = when {
             collisionGrid.isWalkable(clampedX, clampedY) -> clampedX to clampedY
-            collisionGrid.isWalkable(clampedX, curY)     -> clampedX to curY
-            collisionGrid.isWalkable(curX, clampedY)     -> curX to clampedY
+            collisionGrid.isWalkable(clampedX, curY) -> clampedX to curY
+            collisionGrid.isWalkable(curX, clampedY) -> curX to clampedY
             else -> {
                 if (abs(dxForFacing) > 0.0001f) {
                     _state.update { it.copy(isFacingRight = dxForFacing > 0) }
@@ -200,7 +210,9 @@ class SuburbanoInteriorViewModel(
         val action = if (current.isRunning) PlayerAction.RUN else PlayerAction.WALK
 
         idleJob?.cancel()
-        _state.update { it.copy(playerX = x, playerY = y, playerAction = action, isFacingRight = facing) }
+        _state.update {
+            it.copy(playerX = x, playerY = y, playerAction = action, isFacingRight = facing)
+        }
 
         idleJob = viewModelScope.launch {
             delay(150)
@@ -212,6 +224,7 @@ class SuburbanoInteriorViewModel(
         _state.update { it.copy(isRunning = running) }
     }
 
+    // --- HOTSPOTS (DOORS) ---
     private fun checkHotspots(x: Float, y: Float) {
         val doors = _state.value.doors
         val detected = doors.firstOrNull { door ->
@@ -228,8 +241,11 @@ class SuburbanoInteriorViewModel(
         val door = _state.value.activeDoor ?: return
         when (door.targetRoomId) {
             "taquilla" -> {
-                _state.update { it.copy(hasRechargedTicket = true, messageToast = "Has recargado tu tarjeta del Metrobús") }
-                viewModelScope.launch { delay(2000); _state.update { it.copy(messageToast = null) } }
+                _state.update { it.copy(hasRechargedTicket = true, messageToast = "Has recargado tu tarjeta del suburbano") }
+                viewModelScope.launch {
+                    delay(2000)
+                    _state.update { it.copy(messageToast = null) }
+                }
             }
             "torniquetes" -> {
                 if (_state.value.hasRechargedTicket) {
@@ -241,22 +257,28 @@ class SuburbanoInteriorViewModel(
                         val stepDelay = 1200L / steps
                         for (i in 1..steps) {
                             val fraction = i.toFloat() / steps
-                            _state.update { it.copy(playerY = startY - fraction * 0.50f, playerAction = PlayerAction.WALK) }
+                            _state.update { it.copy(playerY = startY + fraction * 0.23f, playerAction = PlayerAction.WALK) }
                             delay(stepDelay)
                         }
                         _state.update { it.copy(areControlsEnabled = true, playerAction = PlayerAction.IDLE) }
                     }
                 } else {
-                    _state.update { it.copy(messageToast = "No tienes saldo disponible en tu tarjeta") }
-                    viewModelScope.launch { delay(2000); _state.update { it.copy(messageToast = null) } }
+                    _state.update { it.copy(messageToast = "No tienes saldo disponible") }
+                    viewModelScope.launch {
+                        delay(2000)
+                        _state.update { it.copy(messageToast = null) }
+                    }
                 }
             }
             "anden" -> {
-                if (!_state.value.isBus1Departing) {
-                    _state.update { it.copy(isBus1Animating = true, areControlsEnabled = false, isBoardingWalkActive = true) }
+                if (!_state.value.isSuburbano1Departing) {
+                    _state.update { it.copy(isSuburbano1Animating = true, areControlsEnabled = false, isBoardingWalkActive = true) }
                 } else {
-                    _state.update { it.copy(messageToast = "Debes esperar a que llegue otro autobús") }
-                    viewModelScope.launch { delay(2000); _state.update { it.copy(messageToast = null) } }
+                    _state.update { it.copy(messageToast = "Debes esperar a que llegue otro tren") }
+                    viewModelScope.launch {
+                        delay(2000)
+                        _state.update { it.copy(messageToast = null) }
+                    }
                 }
             }
             "salir_torniquetes" -> {
@@ -268,7 +290,7 @@ class SuburbanoInteriorViewModel(
                     val stepDelay = 1200L / steps
                     for (i in 1..steps) {
                         val fraction = i.toFloat() / steps
-                        _state.update { it.copy(playerY = (startY + fraction * 0.50f).coerceAtMost(1f), playerAction = PlayerAction.WALK) }
+                        _state.update { it.copy(playerY = (startY - fraction * 0.23f).coerceAtLeast(0f), playerAction = PlayerAction.WALK) }
                         delay(stepDelay)
                     }
                     _state.update {
@@ -279,15 +301,20 @@ class SuburbanoInteriorViewModel(
                             messageToast = "Has salido de los torniquetes. Ve a la taquilla para recargar tu tarjeta."
                         )
                     }
-                    delay(3000); _state.update { it.copy(messageToast = null) }
+                    delay(3000)
+                    _state.update { it.copy(messageToast = null) }
                 }
             }
             "salida" -> {
+                // Señaliza al Screen que debe ejecutar onExit
                 _state.update { it.copy(exitStationRequested = true) }
             }
             else -> {
                 _state.update { it.copy(messageToast = "Interacción con ${door.label}") }
-                viewModelScope.launch { delay(2000); _state.update { it.copy(messageToast = null) } }
+                viewModelScope.launch {
+                    delay(2000)
+                    _state.update { it.copy(messageToast = null) }
+                }
             }
         }
     }
@@ -296,15 +323,7 @@ class SuburbanoInteriorViewModel(
         _state.update { it.copy(showSuburbanoMap = false) }
         viewModelScope.launch {
             idleJob?.cancel()
-            _state.update {
-                it.copy(
-                    isPlayerVisible = true,
-                    playerAction = PlayerAction.WALK,
-                    isFacingRight = false,
-                    areControlsEnabled = false,
-                    isDisembarkingWalkActive = true
-                )
-            }
+            _state.update { it.copy(isPlayerVisible = true, playerAction = PlayerAction.WALK, isFacingRight = false, areControlsEnabled = false, isDisembarkingWalkActive = true) }
             val startX = _state.value.playerX
             val targetX = startX - 0.05f
             val steps = 20
@@ -314,21 +333,15 @@ class SuburbanoInteriorViewModel(
                 _state.update { it.copy(playerX = startX + (targetX - startX) * fraction, playerAction = PlayerAction.WALK) }
                 delay(stepDelay)
             }
-            _state.update {
-                it.copy(
-                    playerAction = PlayerAction.IDLE,
-                    areControlsEnabled = true,
-                    isBus1Departing = true,
-                    isDisembarkingWalkActive = false
-                )
-            }
+            _state.update { it.copy(playerAction = PlayerAction.IDLE, areControlsEnabled = true, isSuburbano1Departing = true, isDisembarkingWalkActive = false) }
+            
             delay(5000)
-            _state.update { it.copy(isBus1Departing = false) }
+            _state.update { it.copy(isSuburbano1Departing = false) }
         }
     }
 
-    fun onBus1AnimationFinished() {
-        if (_state.value.isBus1Animating) {
+    fun onSuburbano1AnimationFinished() {
+        if (_state.value.isSuburbano1Animating) {
             if (_state.value.isBoardingWalkActive) {
                 viewModelScope.launch {
                     idleJob?.cancel()
@@ -342,35 +355,26 @@ class SuburbanoInteriorViewModel(
                         _state.update { it.copy(playerX = startX + (targetX - startX) * fraction, playerAction = PlayerAction.WALK) }
                         delay(stepDelay)
                     }
-                    _state.update {
-                        it.copy(
-                            isPlayerVisible = false,
-                            playerAction = PlayerAction.IDLE,
-                            isBoardingWalkActive = false,
-                            isBus1Animating = false,
-                            showSuburbanoMap = true
-                        )
-                    }
+                    _state.update { it.copy(
+                        isPlayerVisible = false,
+                        playerAction = PlayerAction.IDLE,
+                        isBoardingWalkActive = false,
+                        isSuburbano1Animating = false,
+                        showSuburbanoMap = true
+                    ) }
                 }
             } else {
-                _state.update { it.copy(isBus1Animating = false, showSuburbanoMap = true) }
+                _state.update { it.copy(isSuburbano1Animating = false, showSuburbanoMap = true) }
             }
         } else if (_state.value.spawnWithAnimation) {
             viewModelScope.launch {
                 idleJob?.cancel()
-                delay(500)
+                delay(500) // Esperar a que el suburbano se asiente
                 val startX = _state.value.playerX
                 val targetX = startX - 0.05f
-                _state.update {
-                    it.copy(
-                        spawnWithAnimation = false,
-                        isPlayerVisible = true,
-                        playerAction = PlayerAction.WALK,
-                        isFacingRight = false,
-                        areControlsEnabled = false,
-                        isDisembarkingWalkActive = true
-                    )
-                }
+                
+                _state.update { it.copy(spawnWithAnimation = false, isPlayerVisible = true, playerAction = PlayerAction.WALK, isFacingRight = false, areControlsEnabled = false, isDisembarkingWalkActive = true) }
+                
                 val steps = 20
                 val stepDelay = 600L / steps
                 for (i in 1..steps) {
@@ -378,30 +382,23 @@ class SuburbanoInteriorViewModel(
                     _state.update { it.copy(playerX = startX + (targetX - startX) * fraction, playerAction = PlayerAction.WALK) }
                     delay(stepDelay)
                 }
-                _state.update {
-                    it.copy(
-                        playerAction = PlayerAction.IDLE,
-                        areControlsEnabled = true,
-                        isBus1Departing = true,
-                        isDisembarkingWalkActive = false
-                    )
-                }
+                _state.update { it.copy(playerAction = PlayerAction.IDLE, areControlsEnabled = true, isSuburbano1Departing = true, isDisembarkingWalkActive = false) }
                 delay(5000)
-                _state.update { it.copy(isBus1Departing = false) }
+                _state.update { it.copy(isSuburbano1Departing = false) }
             }
         }
     }
 
+    /** Consume la solicitud de salida después de que el Screen haya llamado onExit. */
     fun consumeExitStation() {
         _state.update { it.copy(exitStationRequested = false) }
     }
 
-    // ─── MODO DISEÑADOR ───────────────────────────────────────────────────────
-
+    // --- DISEÑADOR ---
     fun toggleDesignerMode() {
         _state.update { it.copy(designerMode = !it.designerMode) }
     }
-
+    
     fun setDesignerTarget(target: DesignerTarget) {
         _state.update { it.copy(designerTarget = target) }
     }
@@ -413,18 +410,25 @@ class SuburbanoInteriorViewModel(
     fun paintCellAtWorld(normalizedX: Float, normalizedY: Float) {
         val s = _state.value
         if (s.designerTarget != DesignerTarget.MATRIX) return
+        
+        // Usar las dimensiones reales de la matriz cargada, no los valores fijos
         val currentRows = s.designerRows.toMutableList()
         val rows = currentRows.size
         val cols = currentRows.maxOfOrNull { it.length } ?: 0
         if (rows == 0 || cols == 0) return
+
         val c = (normalizedX * cols).toInt().coerceIn(0, cols - 1)
         val r = (normalizedY * rows).toInt().coerceIn(0, rows - 1)
+
         val rowStr = currentRows[r].padEnd(cols, '.')
         val charArr = rowStr.toCharArray()
+        val oldChar = charArr[c]
         val newChar = if (s.designerBrushWall) '#' else '.'
-        if (charArr[c] == newChar) return
+        if (oldChar == newChar) return
+
         charArr[c] = newChar
         currentRows[r] = String(charArr)
+
         _state.update { it.copy(designerRows = currentRows, designerDirty = true) }
         updateCollisionGrid(currentRows)
     }
@@ -437,10 +441,12 @@ class SuburbanoInteriorViewModel(
         _state.update { it.copy(designerDirty = false) }
     }
 
+    // --- IMPORTACIÓN / EXPORTACIÓN SAF ---
     fun exportMatricesToUri(uri: Uri) {
         try {
             context.contentResolver.openOutputStream(uri)?.use { out ->
-                out.write(gson.toJson(_state.value.designerRows).toByteArray())
+                val json = gson.toJson(_state.value.designerRows)
+                out.write(json.toByteArray())
             }
         } catch (e: Exception) { e.printStackTrace() }
     }
@@ -448,7 +454,8 @@ class SuburbanoInteriorViewModel(
     fun importMatricesFromUri(uri: Uri) {
         try {
             context.contentResolver.openInputStream(uri)?.use { inp ->
-                val rows = gson.fromJson<List<String>>(InputStreamReader(inp).readText(), object : TypeToken<List<String>>() {}.type)
+                val json = InputStreamReader(inp).readText()
+                val rows = gson.fromJson<List<String>>(json, object : TypeToken<List<String>>() {}.type)
                 if (rows != null) {
                     gridRows = rows.size
                     gridCols = rows.maxOfOrNull { it.length } ?: 0
@@ -462,7 +469,8 @@ class SuburbanoInteriorViewModel(
     fun exportWaypointsToUri(uri: Uri) {
         try {
             context.contentResolver.openOutputStream(uri)?.use { out ->
-                out.write(gson.toJson(_state.value.doors).toByteArray())
+                val json = gson.toJson(_state.value.doors)
+                out.write(json.toByteArray())
             }
         } catch (e: Exception) { e.printStackTrace() }
     }
@@ -470,8 +478,11 @@ class SuburbanoInteriorViewModel(
     fun importWaypointsFromUri(uri: Uri) {
         try {
             context.contentResolver.openInputStream(uri)?.use { inp ->
-                val ds = gson.fromJson<List<ZoneDoor>>(InputStreamReader(inp).readText(), object : TypeToken<List<ZoneDoor>>() {}.type)
-                if (ds != null) _state.update { it.copy(doors = ds, designerDirty = true) }
+                val json = InputStreamReader(inp).readText()
+                val ds = gson.fromJson<List<ZoneDoor>>(json, object : TypeToken<List<ZoneDoor>>() {}.type)
+                if (ds != null) {
+                    _state.update { it.copy(doors = ds, designerDirty = true) }
+                }
             }
         } catch (e: Exception) { e.printStackTrace() }
     }
@@ -479,7 +490,8 @@ class SuburbanoInteriorViewModel(
     fun exportGlobalWaypointsToUri(uri: Uri) {
         try {
             context.contentResolver.openOutputStream(uri)?.use { out ->
-                out.write(gson.toJson(_state.value.globalWaypoints).toByteArray())
+                val json = gson.toJson(_state.value.globalWaypoints)
+                out.write(json.toByteArray())
             }
         } catch (e: Exception) { e.printStackTrace() }
     }
@@ -487,7 +499,8 @@ class SuburbanoInteriorViewModel(
     fun importGlobalWaypointsFromUri(uri: Uri) {
         try {
             context.contentResolver.openInputStream(uri)?.use { inp ->
-                val ds = gson.fromJson<List<ZoneDoor>>(InputStreamReader(inp).readText(), object : TypeToken<List<ZoneDoor>>() {}.type)
+                val json = InputStreamReader(inp).readText()
+                val ds = gson.fromJson<List<ZoneDoor>>(json, object : TypeToken<List<ZoneDoor>>() {}.type)
                 if (ds != null) {
                     _state.update { it.copy(globalWaypoints = ds, designerDirty = true) }
                     saveGlobalWaypoints()
@@ -506,45 +519,59 @@ class SuburbanoInteriorViewModel(
     }
 
     fun resizeDesignerMatrixBy(deltaCols: Int, deltaRows: Int) {
-        val newCols = (gridCols + deltaCols).coerceIn(5, 100)
-        val newRows = (gridRows + deltaRows).coerceIn(5, 100)
-        if (newCols == gridCols && newRows == gridRows) return
+        var currentCols = gridCols
+        var currentRows = gridRows
+        val newCols = (currentCols + deltaCols).coerceIn(5, 100)
+        val newRows = (currentRows + deltaRows).coerceIn(5, 100)
+        if (newCols == currentCols && newRows == currentRows) return
+
         val oldRows = _state.value.designerRows
         val newRowsList = mutableListOf<String>()
         for (r in 0 until newRows) {
             if (r < oldRows.size) {
                 var rowStr = oldRows[r]
-                rowStr = if (newCols > gridCols) rowStr + ".".repeat(newCols - gridCols)
-                         else rowStr.substring(0, newCols)
+                if (newCols > currentCols) rowStr += ".".repeat(newCols - currentCols)
+                else if (newCols < currentCols) rowStr = rowStr.substring(0, newCols)
                 newRowsList.add(rowStr)
             } else {
                 newRowsList.add(".".repeat(newCols))
             }
         }
-        gridCols = newCols; gridRows = newRows
+        gridCols = newCols
+        gridRows = newRows
+
         _state.update { it.copy(designerRows = newRowsList, designerDirty = true) }
         updateCollisionGrid(newRowsList)
     }
-
+    
+    // --- EDICIÓN DE WAYPOINTS ---
     fun selectDoor(x: Float, y: Float) {
         val s = _state.value
         val clickedIndex = s.doors.indexOfLast { door ->
             val r = door.hitboxFrac
             x in r.left..r.right && y in r.top..r.bottom
         }
-        if (clickedIndex != -1) _state.update { it.copy(selectedDoorIndex = clickedIndex) }
+        if (clickedIndex != -1) {
+            _state.update { it.copy(selectedDoorIndex = clickedIndex) }
+        }
     }
 
     fun dragDoor(x: Float, y: Float) {
         val s = _state.value
         val idx = s.selectedDoorIndex
         if (idx !in s.doors.indices) return
-        val door = s.doors[idx]; val old = door.hitboxFrac
-        val w = old.right - old.left; val h = old.bottom - old.top
+
+        val door = s.doors[idx]
+        val old = door.hitboxFrac
+        val w = old.right - old.left
+        val h = old.bottom - old.top
+
         val newLeft = (x - w / 2f).coerceIn(0f, 1f - w)
         val newTop = (y - h / 2f).coerceIn(0f, 1f - h)
+        val newHitbox = NormRect(newLeft, newTop, newLeft + w, newTop + h)
+
         val newList = s.doors.toMutableList()
-        newList[idx] = door.copy(hitboxFrac = NormRect(newLeft, newTop, newLeft + w, newTop + h))
+        newList[idx] = door.copy(hitboxFrac = newHitbox)
         _state.update { it.copy(doors = newList, designerDirty = true) }
     }
 
@@ -552,14 +579,25 @@ class SuburbanoInteriorViewModel(
         val s = _state.value
         val idx = s.selectedDoorIndex
         if (idx !in s.doors.indices) return
-        val door = s.doors[idx]; val old = door.hitboxFrac
-        val w = ((old.right - old.left) + deltaW).coerceIn(0.02f, 1f)
-        val h = ((old.bottom - old.top) + deltaH).coerceIn(0.02f, 1f)
-        val cx = (old.left + old.right) / 2f; val cy = (old.top + old.bottom) / 2f
+
+        val door = s.doors[idx]
+        val old = door.hitboxFrac
+        
+        var w = (old.right - old.left) + deltaW
+        var h = (old.bottom - old.top) + deltaH
+        
+        w = w.coerceIn(0.02f, 1f)
+        h = h.coerceIn(0.02f, 1f)
+        
+        val cx = (old.left + old.right) / 2f
+        val cy = (old.top + old.bottom) / 2f
+        
         val newLeft = (cx - w / 2f).coerceIn(0f, 1f - w)
         val newTop = (cy - h / 2f).coerceIn(0f, 1f - h)
+        val newHitbox = NormRect(newLeft, newTop, newLeft + w, newTop + h)
+        
         val newList = s.doors.toMutableList()
-        newList[idx] = door.copy(hitboxFrac = NormRect(newLeft, newTop, newLeft + w, newTop + h))
+        newList[idx] = door.copy(hitboxFrac = newHitbox)
         _state.update { it.copy(doors = newList, designerDirty = true) }
     }
 
@@ -591,7 +629,8 @@ class SuburbanoInteriorViewModel(
     }
 
     fun moveSelectedGlobalWaypointTo(x: Float, y: Float) {
-        val idx = _state.value.selectedGlobalWaypointIndex; if (idx == -1) return
+        val idx = _state.value.selectedGlobalWaypointIndex
+        if (idx == -1) return
         val list = _state.value.globalWaypoints.toMutableList()
         val door = list[idx]
         val hw = (door.hitboxFrac.right - door.hitboxFrac.left) / 2
@@ -601,17 +640,22 @@ class SuburbanoInteriorViewModel(
     }
 
     fun moveSelectedGlobalWaypointBy(dx: Float, dy: Float) {
-        val idx = _state.value.selectedGlobalWaypointIndex; if (idx == -1) return
+        val idx = _state.value.selectedGlobalWaypointIndex
+        if (idx == -1) return
         val list = _state.value.globalWaypoints.toMutableList()
-        val door = list[idx]; val rect = door.hitboxFrac
+        val door = list[idx]
+        val rect = door.hitboxFrac
         val newLeft = (rect.left + dx).coerceIn(0f, 1f - (rect.right - rect.left))
         val newTop = (rect.top + dy).coerceIn(0f, 1f - (rect.bottom - rect.top))
-        list[idx] = door.copy(hitboxFrac = NormRect(newLeft, newTop, newLeft + (rect.right - rect.left), newTop + (rect.bottom - rect.top)))
+        val newRight = newLeft + (rect.right - rect.left)
+        val newBottom = newTop + (rect.bottom - rect.top)
+        list[idx] = door.copy(hitboxFrac = NormRect(newLeft, newTop, newRight, newBottom))
         _state.update { it.copy(globalWaypoints = list) }
     }
 
     fun deleteSelectedGlobalWaypoint() {
-        val idx = _state.value.selectedGlobalWaypointIndex; if (idx == -1) return
+        val idx = _state.value.selectedGlobalWaypointIndex
+        if (idx == -1) return
         val list = _state.value.globalWaypoints.toMutableList()
         list.removeAt(idx)
         _state.update { it.copy(globalWaypoints = list, selectedGlobalWaypointIndex = -1) }
@@ -620,7 +664,7 @@ class SuburbanoInteriorViewModel(
     fun saveGlobalWaypoints() {
         val globalPrefs = context.getSharedPreferences("suburbano_map_global", Context.MODE_PRIVATE)
         globalPrefs.edit().putString("global_waypoints", gson.toJson(_state.value.globalWaypoints)).apply()
-        _state.update { it.copy(messageToast = "Waypoints del Metrobús guardados") }
+        _state.update { it.copy(messageToast = "Waypoints globales guardados") }
         viewModelScope.launch { delay(2000); _state.update { it.copy(messageToast = null) } }
     }
 
