@@ -1,25 +1,25 @@
 [
     {
         "hitboxFrac":  {
-                           "left":  0.5,
-                           "top":  0.115,
-                           "right":  0.57,
-                           "bottom":  0.185
+                           "left":  0.440,
+                           "top":  0.155,
+                           "right":  0.520,
+                           "bottom":  0.235
                        },
         "kind":  "GENERIC",
-        "label":  "Cuautitlán",
-        "targetRoomId":  "Cuautitlán"
+        "label":  "CuautitlÃ¡n",
+        "targetRoomId":  "CuautitlÃ¡n"
     },
     {
         "hitboxFrac":  {
-                           "left":  0.49,
-                           "top":  0.23,
-                           "right":  0.56,
-                           "bottom":  0.3
+                           "left":  0.430,
+                           "top":  0.270,
+                           "right":  0.510,
+                           "bottom":  0.350
                        },
         "kind":  "GENERIC",
-        "label":  "Tultitlán",
-        "targetRoomId":  "Tultitlán"
+        "label":  "TultitlÃ¡n",
+        "targetRoomId":  "TultitlÃ¡n"
     },
     {
         "hitboxFrac":  {
@@ -29,15 +29,15 @@
                            "bottom":  0.42
                        },
         "kind":  "GENERIC",
-        "label":  "Lechería",
-        "targetRoomId":  "Lechería"
+        "label":  "LecherÃ­a",
+        "targetRoomId":  "LecherÃ­a"
     },
     {
         "hitboxFrac":  {
-                           "left":  0.42,
-                           "top":  0.485,
-                           "right":  0.49,
-                           "bottom":  0.555
+                           "left":  0.370,
+                           "top":  0.510,
+                           "right":  0.450,
+                           "bottom":  0.590
                        },
         "kind":  "GENERIC",
         "label":  "San Rafael",
@@ -45,10 +45,10 @@
     },
     {
         "hitboxFrac":  {
-                           "left":  0.5,
-                           "top":  0.58,
-                           "right":  0.57,
-                           "bottom":  0.65
+                           "left":  0.445,
+                           "top":  0.575,
+                           "right":  0.525,
+                           "bottom":  0.655
                        },
         "kind":  "GENERIC",
         "label":  "Tlalnepantla",
@@ -56,10 +56,10 @@
     },
     {
         "hitboxFrac":  {
-                           "left":  0.53,
-                           "top":  0.69,
-                           "right":  0.6,
-                           "bottom":  0.76
+                           "left":  0.475,
+                           "top":  0.685,
+                           "right":  0.555,
+                           "bottom":  0.765
                        },
         "kind":  "GENERIC",
         "label":  "Fortuna",
@@ -67,10 +67,10 @@
     },
     {
         "hitboxFrac":  {
-                           "left":  0.58,
-                           "top":  0.81,
-                           "right":  0.65,
-                           "bottom":  0.88
+                           "left":  0.525,
+                           "top":  0.805,
+                           "right":  0.605,
+                           "bottom":  0.885
                        },
         "kind":  "GENERIC",
         "label":  "Buenavista",

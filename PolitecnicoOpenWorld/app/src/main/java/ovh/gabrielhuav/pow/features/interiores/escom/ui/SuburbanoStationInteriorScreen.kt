@@ -129,7 +129,7 @@ fun SuburbanoStationInteriorScreen(
 
     BackHandler { onExit(stationName) }
 
-    // Observar si el ViewModel solicita salir de la estaciÃ³n (waypoint "salida")
+    // Observar si el ViewModel solicita salir de la estaciÃƒÆ’Ã‚Â³n (waypoint "salida")
     LaunchedEffect(state.exitStationRequested) {
         if (state.exitStationRequested) {
             viewModel.consumeExitStation()
@@ -139,7 +139,7 @@ fun SuburbanoStationInteriorScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0D0D11))) {
 
-        // Canvas / CÃ¡mara principal inmersiva
+        // Canvas / CÃƒÆ’Ã‚Â¡mara principal inmersiva
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val viewW = with(density) { maxWidth.toPx() }
             val viewH = with(density) { maxHeight.toPx() }
@@ -228,7 +228,7 @@ fun SuburbanoStationInteriorScreen(
                 }
             }
 
-            // --- MODO DISEÃ‘ADOR (CAPA MATRIZ) ---
+            // --- MODO DISEÃƒÆ’Ã¢â‚¬ËœADOR (CAPA MATRIZ) ---
             CollisionMatrixDesignerLayer(
                 enabled = state.designerMode && state.designerTarget == DesignerTarget.MATRIX,
                 rows = state.designerRows,
@@ -243,7 +243,7 @@ fun SuburbanoStationInteriorScreen(
                 modifier = Modifier.matchParentSize()
             )
             
-            // --- MODO DISEÃ‘ADOR (CAPA WAYPOINTS) ---
+            // --- MODO DISEÃƒÆ’Ã¢â‚¬ËœADOR (CAPA WAYPOINTS) ---
             WaypointDesignerLayer(
                 enabled = state.designerMode && state.designerTarget == DesignerTarget.WAYPOINTS,
                 doors = state.doors,
@@ -258,7 +258,7 @@ fun SuburbanoStationInteriorScreen(
                 modifier = Modifier.matchParentSize()
             )
 
-            // (Eliminado el pintado debug de ZONAS DE INTERACCIÃ“N a peticiÃ³n)
+            // (Eliminado el pintado debug de ZONAS DE INTERACCIÃƒÆ’Ã¢â‚¬Å“N a peticiÃƒÆ’Ã‚Â³n)
 
             // --- JUGADOR ---
             val playerSizeBase = 300f
@@ -378,7 +378,7 @@ fun SuburbanoStationInteriorScreen(
             }
         }
 
-        // --- BARRA SUPERIOR Y BOTÃ“N DISEÃ‘ADOR ---
+        // --- BARRA SUPERIOR Y BOTÃƒÆ’Ã¢â‚¬Å“N DISEÃƒÆ’Ã¢â‚¬ËœADOR ---
         Row(
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -404,7 +404,7 @@ fun SuburbanoStationInteriorScreen(
             )
         }
 
-        // BotÃ³n DiseÃ±ador
+        // BotÃƒÆ’Ã‚Â³n DiseÃƒÆ’Ã‚Â±ador
         IconButton(
             onClick = { viewModel.toggleDesignerMode() },
             modifier = Modifier
@@ -413,10 +413,10 @@ fun SuburbanoStationInteriorScreen(
                 .padding(12.dp)
                 .background(Color.White.copy(alpha = 0.85f), CircleShape)
         ) {
-            Icon(Icons.Default.Architecture, "DiseÃ±ador", tint = Color.Black)
+            Icon(Icons.Default.Architecture, "DiseÃƒÆ’Ã‚Â±ador", tint = Color.Black)
         }
 
-        // --- TOOLBAR DISEÃ‘ADOR ---
+        // --- TOOLBAR DISEÃƒÆ’Ã¢â‚¬ËœADOR ---
         if (state.designerMode) {
             val gridRows = state.designerRows.size
             val gridCols = state.designerRows.maxOfOrNull { it.length } ?: 0
@@ -467,7 +467,7 @@ fun SuburbanoStationInteriorScreen(
 }
 
 /**
- * Barra de herramientas del Modo DiseÃ±ador idÃ©ntica a ZombieGameScreen.
+ * Barra de herramientas del Modo DiseÃƒÆ’Ã‚Â±ador idÃƒÆ’Ã‚Â©ntica a ZombieGameScreen.
  */
 @Composable
 private fun DesignerToolbar(
@@ -504,7 +504,7 @@ private fun DesignerToolbar(
             androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.int_designer_room, roomName.uppercase()),
             color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold, fontSize = 12.sp
         )
-        // Selector de objetivo: MATRIZ de colisiÃ³n o WAYPOINTS (puertas).
+        // Selector de objetivo: MATRIZ de colisiÃƒÆ’Ã‚Â³n o WAYPOINTS (puertas).
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             ToolButton("MATRIZ", !isWaypoints, Color(0xFF3A86FF), Modifier.weight(1f)) { onSelectTarget(DesignerTarget.MATRIX) }
             ToolButton("WAYPOINTS", isWaypoints, Color(0xFFD4AF37), Modifier.weight(1f)) { onSelectTarget(DesignerTarget.WAYPOINTS) }
@@ -522,9 +522,9 @@ private fun DesignerToolbar(
                     color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontWeight = FontWeight.Bold
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    ToolButton("ANCHO âˆ’", false, Color(0xFFD4AF37), Modifier.weight(1f)) { onResizeWaypoint(-0.02f, 0f) }
+                    ToolButton("ANCHO ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢", false, Color(0xFFD4AF37), Modifier.weight(1f)) { onResizeWaypoint(-0.02f, 0f) }
                     ToolButton("ANCHO +", false, Color(0xFFD4AF37), Modifier.weight(1f)) { onResizeWaypoint(0.02f, 0f) }
-                    ToolButton("ALTO âˆ’", false, Color(0xFFD4AF37), Modifier.weight(1f)) { onResizeWaypoint(0f, -0.02f) }
+                    ToolButton("ALTO ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢", false, Color(0xFFD4AF37), Modifier.weight(1f)) { onResizeWaypoint(0f, -0.02f) }
                     ToolButton("ALTO +", false, Color(0xFFD4AF37), Modifier.weight(1f)) { onResizeWaypoint(0f, 0.02f) }
                 }
             }
@@ -533,15 +533,15 @@ private fun DesignerToolbar(
                 ToolButton("PARED", brushWall, Color(0xFFD32F2F), Modifier.weight(1f)) { onBrush(true) }
                 ToolButton("BORRAR", !brushWall, Color(0xFF4CAF50), Modifier.weight(1f)) { onBrush(false) }
             }
-            // â”€â”€â”€ TAMAÃ‘O DE LA MATRIZ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ TAMAÃƒÆ’Ã¢â‚¬ËœO DE LA MATRIZ ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
             Text(
                 androidx.compose.ui.res.stringResource(ovh.gabrielhuav.pow.R.string.int_size_grid, gridCols, gridRows),
                 color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontWeight = FontWeight.Bold
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                ToolButton("COL âˆ’", false, Color(0xFF3A86FF), Modifier.weight(1f)) { onResize(-1, 0) }
+                ToolButton("COL ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢", false, Color(0xFF3A86FF), Modifier.weight(1f)) { onResize(-1, 0) }
                 ToolButton("COL +", false, Color(0xFF3A86FF), Modifier.weight(1f)) { onResize(1, 0) }
-                ToolButton("FIL âˆ’", false, Color(0xFF3A86FF), Modifier.weight(1f)) { onResize(0, -1) }
+                ToolButton("FIL ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢", false, Color(0xFF3A86FF), Modifier.weight(1f)) { onResize(0, -1) }
                 ToolButton("FIL +", false, Color(0xFF3A86FF), Modifier.weight(1f)) { onResize(0, 1) }
             }
         }
@@ -667,7 +667,9 @@ private fun SuburbanoPlayerSprite(state: SuburbanoInteriorState) {
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    scaleX = if (isFacingRight) 1f else -1f
+                    scaleX = if (isFacingRight) 0.55f else -0.55f
+                    scaleY = 0.55f
+                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0.85f)
                 }
         )
     }
